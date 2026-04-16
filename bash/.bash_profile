@@ -17,8 +17,8 @@ source <(carapace _carapace)
 # ---------------------------------------------------------------------------
 # Better defaults — replace built-ins with modern alternatives
 # ---------------------------------------------------------------------------
-command -v eza  &>/dev/null && alias ls='eza --icons'
-command -v eza  &>/dev/null && alias ll='eza -la --icons --git'
+command -v eza  &>/dev/null && alias ls='eza'
+command -v eza  &>/dev/null && alias ll='eza -la --git'
 command -v bat  &>/dev/null && alias cat='bat --style=auto'
 
 # ---------------------------------------------------------------------------

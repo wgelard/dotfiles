@@ -37,8 +37,8 @@ if (Get-Command fzf -ErrorAction SilentlyContinue) {
 # Better defaults — replace built-ins with modern alternatives
 # ---------------------------------------------------------------------------
 if (Get-Command eza -ErrorAction SilentlyContinue) {
-    function ls  { eza --icons @args }
-    function ll  { eza -la --icons --git @args }
+    function ls  { eza @args }
+    function ll  { eza -la --git @args }
 }
 
 if (Get-Command bat -ErrorAction SilentlyContinue) {
