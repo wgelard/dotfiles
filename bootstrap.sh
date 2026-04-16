@@ -190,9 +190,14 @@ symlink "$DOTFILES_DIR/git/.gitconfig"      "$HOME/.gitconfig"
 symlink "$DOTFILES_DIR/git/.gitattributes"  "$HOME/.gitattributes"
 symlink "$DOTFILES_DIR/bash/.bash_profile"  "$HOME/.bash_profile"
 
-# Starship config
+# Starship config — apply catppuccin-powerline preset directly (no symlink needed)
 mkdir -p "$HOME/.config"
-symlink "$DOTFILES_DIR/starship/starship.toml" "$HOME/.config/starship.toml"
+if command -v starship &>/dev/null; then
+    starship preset catppuccin-powerline -o "$HOME/.config/starship.toml"
+    echo "→ Starship: catppuccin-powerline preset applied."
+else
+    echo "→ starship not found — skipping preset. Run bootstrap again after installing starship."
+fi
 
 # ---------------------------------------------------------------------------
 echo ""

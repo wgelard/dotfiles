@@ -297,11 +297,15 @@ $psProfileDir = Split-Path $PROFILE
 if (-not (Test-Path $psProfileDir)) { New-Item -ItemType Directory -Path $psProfileDir -Force | Out-Null }
 New-Symlink -Target $PROFILE -Source (Join-Path $DotfilesDir "powershell\profile.ps1")
 
-# Starship config
-$starshipConfig = Join-Path $HOME ".config\starship.toml"
-$starshipDir    = Split-Path $starshipConfig
+# Starship config — apply catppuccin-powerline preset directly (no symlink needed)
+$starshipDir = Join-Path $HOME ".config"
 if (-not (Test-Path $starshipDir)) { New-Item -ItemType Directory -Path $starshipDir -Force | Out-Null }
-New-Symlink -Target $starshipConfig -Source (Join-Path $DotfilesDir "starship\starship.toml")
+if (Get-Command starship -ErrorAction SilentlyContinue) {
+    starship preset catppuccin-powerline -o (Join-Path $starshipDir "starship.toml")
+    Write-Host "→ Starship: catppuccin-powerline preset applied."
+} else {
+    Write-Warning "starship not found — skipping preset. Run bootstrap again after installing starship."
+}
 
 # ---------------------------------------------------------------------------
 Write-Host ""
