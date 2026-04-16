@@ -20,7 +20,6 @@ source <(carapace _carapace)
 command -v eza  &>/dev/null && alias ls='eza --icons'
 command -v eza  &>/dev/null && alias ll='eza -la --icons --git'
 command -v bat  &>/dev/null && alias cat='bat --style=auto'
-command -v zoxide &>/dev/null && eval "$(zoxide init bash)" && alias cd='z'
 
 # ---------------------------------------------------------------------------
 # Navigation shortcuts
@@ -55,6 +54,14 @@ if command -v fzf &>/dev/null; then
 fi
 
 # ---------------------------------------------------------------------------
-# Starship prompt
+# Starship prompt (must be second-to-last — before zoxide)
 # ---------------------------------------------------------------------------
 command -v starship &>/dev/null && eval "$(starship init bash)"
+
+# ---------------------------------------------------------------------------
+# zoxide — must be initialised last
+# ---------------------------------------------------------------------------
+if command -v zoxide &>/dev/null; then
+    eval "$(zoxide init bash)"
+    alias cd='z'
+fi
