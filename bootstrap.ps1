@@ -98,9 +98,17 @@ $bcPresent = $bcExe -or (Get-Command bcomp -ErrorAction SilentlyContinue)
 
 function Write-BcConfig {
     param([string]$BcExePath)
+    # Add BC directory to user PATH permanently so bcomp works in any shell
+    # (avoids quoting issues with spaces in path inside gitconfig cmd)
+    $bcDir = Split-Path $BcExePath
+    $currentUserPath = [System.Environment]::GetEnvironmentVariable('PATH', 'User')
+    if ($currentUserPath -notmatch [regex]::Escape($bcDir)) {
+        [System.Environment]::SetEnvironmentVariable('PATH', "$currentUserPath;$bcDir", 'User')
+        $env:PATH = "$env:PATH;$bcDir"
+        Write-Host "→ Added '$bcDir' to user PATH."
+    }
+
     $localConfig = Join-Path $HOME ".gitconfig.local"
-    # Convert Windows path to POSIX for Git Bash (e.g. C:\Program Files\ → /c/Program Files/)
-    $posixPath = '/' + $BcExePath[0].ToString().ToLower() + ($BcExePath.Substring(2) -replace '\\', '/')
     $bcOverride = @"
 
 [diff]
@@ -109,17 +117,12 @@ function Write-BcConfig {
 	tool = bc
 	guitool = bc
 [difftool "bc"]
-	cmd = "$posixPath" "`$LOCAL" "`$REMOTE"
+	cmd = bcomp "`$LOCAL" "`$REMOTE"
 [mergetool "bc"]
-	cmd = "$posixPath" "`$LOCAL" "`$REMOTE" "`$BASE" "`$MERGED"
+	cmd = bcomp "`$LOCAL" "`$REMOTE" "`$BASE" "`$MERGED"
 "@
     if (Test-Path $localConfig) {
         $existing = Get-Content $localConfig -Raw
-        # Fix any old entry that has the wrong path (missing drive letter)
-        if ($existing -match '"\/Program Files') {
-            $existing = $existing -replace '"/Program Files/', '"/c/Program Files/'
-            Set-Content $localConfig $existing -Encoding UTF8 -NoNewline
-        }
         if ($existing -notmatch 'guitool\s*=\s*bc') {
             Add-Content $localConfig $bcOverride
         }
