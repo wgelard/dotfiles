@@ -8,7 +8,7 @@
     - Optionally installs Beyond Compare 4 (paid ~$60) via winget if user confirms
     - Installs mergiraf via scoop (or cargo binstall as fallback)
     - Prompts for git identity and writes ~/.gitconfig.local (not committed)
-    - Symlinks ~/.gitconfig, ~/.gitattributes, ~/.bash_profile, PowerShell profile, starship.toml to this repo
+    - Symlinks ~/.gitconfig, ~/.gitattributes, ~/.bash_profile to this repo
 .NOTES
     Requires Developer Mode OR run as Administrator for symlink creation.
     Enable Developer Mode: Settings > System > For developers > Developer Mode
@@ -177,7 +177,7 @@ if ($installShell -match '^[Yy]') {
         }
     }
 } else {
-    Write-Host "→ Skipping shell tools. Install any time — they activate automatically via the PowerShell profile."
+    Write-Host "→ Skipping shell tools. Install any time — they activate automatically via the Git Bash profile."
 }
 
 # ---------------------------------------------------------------------------
@@ -294,11 +294,6 @@ function New-Symlink {
 New-Symlink -Target (Join-Path $HOME ".gitconfig")     -Source (Join-Path $DotfilesDir "git\.gitconfig")
 New-Symlink -Target (Join-Path $HOME ".gitattributes") -Source (Join-Path $DotfilesDir "git\.gitattributes")
 New-Symlink -Target (Join-Path $HOME ".bash_profile")  -Source (Join-Path $DotfilesDir "bash\.bash_profile")
-
-# PowerShell profile — ensure parent directory exists
-$psProfileDir = Split-Path $PROFILE
-if (-not (Test-Path $psProfileDir)) { New-Item -ItemType Directory -Path $psProfileDir -Force | Out-Null }
-New-Symlink -Target $PROFILE -Source (Join-Path $DotfilesDir "powershell\profile.ps1")
 
 # Starship config — apply catppuccin-powerline preset directly (no symlink needed)
 $starshipDir = Join-Path $HOME ".config"
