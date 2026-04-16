@@ -1,0 +1,6 @@
+# Personal identity — never commit this
+.gitconfig.local
+
+# Quarto preview artifacts
+*.html
+*_files/
