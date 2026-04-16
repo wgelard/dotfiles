@@ -160,7 +160,7 @@ if ($installShell -match '^[Yy]') {
 }
 
 # ---------------------------------------------------------------------------
-# 3. Install FiraCode Nerd Font (required for starship Catppuccin Powerline)
+# 3. Install FiraCode Nerd Font and configure Windows Terminal
 # ---------------------------------------------------------------------------
 Write-Host ""
 $fontInstalled = Get-ItemProperty 'HKCU:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts' -ErrorAction SilentlyContinue |
@@ -171,10 +171,28 @@ if ($fontInstalled) {
     Write-Host "→ Installing FiraCode Nerd Font via scoop..."
     scoop bucket add nerd-fonts 2>$null
     scoop install nerd-fonts/FiraCode-NF
-    Write-Host "→ Font installed. Set 'FiraCode Nerd Font' in your terminal settings."
+    Write-Host "→ FiraCode Nerd Font installed."
 } else {
     Write-Warning "FiraCode Nerd Font not installed. Download manually from https://www.nerdfonts.com/font-downloads"
     Write-Host "   Or install scoop first: https://scoop.sh"
+}
+
+# Set FiraCode Nerd Font as default in Windows Terminal settings.json
+$wtSettingsPaths = @(
+    "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
+    "$env:LOCALAPPDATA\Microsoft\Windows Terminal\settings.json"
+)
+$wtSettings = $wtSettingsPaths | Where-Object { Test-Path $_ } | Select-Object -First 1
+if ($wtSettings) {
+    $json = Get-Content $wtSettings -Raw | ConvertFrom-Json
+    if (-not $json.profiles) { $json | Add-Member -NotePropertyName profiles -NotePropertyValue ([pscustomobject]@{}) }
+    if (-not $json.profiles.defaults) { $json.profiles | Add-Member -NotePropertyName defaults -NotePropertyValue ([pscustomobject]@{}) }
+    if (-not $json.profiles.defaults.font) { $json.profiles.defaults | Add-Member -NotePropertyName font -NotePropertyValue ([pscustomobject]@{}) }
+    $json.profiles.defaults.font | Add-Member -NotePropertyName face -NotePropertyValue 'FiraCode Nerd Font' -Force
+    $json | ConvertTo-Json -Depth 20 | Set-Content $wtSettings -Encoding UTF8
+    Write-Host "→ Windows Terminal font set to 'FiraCode Nerd Font'."
+} else {
+    Write-Host "→ Windows Terminal settings.json not found — set font manually to 'FiraCode Nerd Font'."
 }
 
 # ---------------------------------------------------------------------------
