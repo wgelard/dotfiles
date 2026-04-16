@@ -115,6 +115,11 @@ function Write-BcConfig {
 "@
     if (Test-Path $localConfig) {
         $existing = Get-Content $localConfig -Raw
+        # Fix any old entry that has the wrong path (missing drive letter)
+        if ($existing -match '"\/Program Files') {
+            $existing = $existing -replace '"/Program Files/', '"/c/Program Files/'
+            Set-Content $localConfig $existing -Encoding UTF8 -NoNewline
+        }
         if ($existing -notmatch 'guitool\s*=\s*bc') {
             Add-Content $localConfig $bcOverride
         }
