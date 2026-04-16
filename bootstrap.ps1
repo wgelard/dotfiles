@@ -160,7 +160,25 @@ if ($installShell -match '^[Yy]') {
 }
 
 # ---------------------------------------------------------------------------
-# 3. Install mergiraf (no winget package — try scoop, then cargo binstall)
+# 3. Install FiraCode Nerd Font (required for starship Catppuccin Powerline)
+# ---------------------------------------------------------------------------
+Write-Host ""
+$fontInstalled = Get-ItemProperty 'HKCU:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts' -ErrorAction SilentlyContinue |
+    Get-Member -MemberType NoteProperty | Where-Object { $_.Name -match 'FiraCode.*Nerd' }
+if ($fontInstalled) {
+    Write-Host "→ FiraCode Nerd Font already installed, skipping."
+} elseif (Get-Command scoop -ErrorAction SilentlyContinue) {
+    Write-Host "→ Installing FiraCode Nerd Font via scoop..."
+    scoop bucket add nerd-fonts 2>$null
+    scoop install nerd-fonts/FiraCode-NF
+    Write-Host "→ Font installed. Set 'FiraCode Nerd Font' in your terminal settings."
+} else {
+    Write-Warning "FiraCode Nerd Font not installed. Download manually from https://www.nerdfonts.com/font-downloads"
+    Write-Host "   Or install scoop first: https://scoop.sh"
+}
+
+# ---------------------------------------------------------------------------
+# 4. Install mergiraf (no winget package — try scoop, then cargo binstall)
 # ---------------------------------------------------------------------------
 if (Get-Command mergiraf -ErrorAction SilentlyContinue) {
     Write-Host "→ mergiraf already installed, skipping."
@@ -181,7 +199,7 @@ Install it manually:
 }
 
 # ---------------------------------------------------------------------------
-# 4. Write ~/.gitconfig.local with git identity (not committed to repo)
+# 5. Write ~/.gitconfig.local with git identity (not committed to repo)
 # ---------------------------------------------------------------------------
 $localConfig = Join-Path $HOME ".gitconfig.local"
 if (Test-Path $localConfig) {
@@ -200,7 +218,7 @@ if (Test-Path $localConfig) {
 }
 
 # ---------------------------------------------------------------------------
-# 5. Symlink dotfiles (backing up any real file first)
+# 6. Symlink dotfiles (backing up any real file first)
 # ---------------------------------------------------------------------------
 $BackupDir = Join-Path $HOME ".dotfiles-backup\$(Get-Date -Format 'yyyy-MM-dd_HHmmss')"
 
