@@ -63,6 +63,14 @@ function .... { Set-Location ..\..\.. }
 # ---------------------------------------------------------------------------
 # Starship prompt (must be last)
 # ---------------------------------------------------------------------------
+# winget installs starship to Program Files which may not be in PATH yet —
+# add it explicitly as fallback
+if (-not (Get-Command starship -ErrorAction SilentlyContinue)) {
+    $starshipFallback = 'C:\Program Files\starship\bin'
+    if (Test-Path $starshipFallback) {
+        $env:PATH = "$starshipFallback;$env:PATH"
+    }
+}
 if (Get-Command starship -ErrorAction SilentlyContinue) {
     Invoke-Expression (&starship init powershell)
 }
