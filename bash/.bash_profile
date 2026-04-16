@@ -5,14 +5,15 @@
 # ---------------------------------------------------------------------------
 if command -v delta &>/dev/null; then
     export GIT_PAGER='delta'
-    export GIT_EXTERNAL_DIFF='delta'
 fi
 
 # ---------------------------------------------------------------------------
 # Shell completions (carapace)
 # ---------------------------------------------------------------------------
-export CARAPACE_BRIDGES='zsh,fish,bash,inshellisense'
-source <(carapace _carapace)
+if command -v carapace &>/dev/null; then
+    export CARAPACE_BRIDGES='zsh,fish,bash,inshellisense'
+    source <(carapace _carapace)
+fi
 
 # ---------------------------------------------------------------------------
 # Better defaults — replace built-ins with modern alternatives
@@ -32,13 +33,7 @@ alias ....='cd ../../..'
 # Git shortcuts (complements git aliases in .gitconfig)
 # ---------------------------------------------------------------------------
 alias g='git'
-alias lg='lazygit'
-
-# ---------------------------------------------------------------------------
-# ripgrep / fd
-# ---------------------------------------------------------------------------
-# fd is installed as fdfind on Debian/Ubuntu — prefer fd if both exist
-command -v fdfind &>/dev/null && ! command -v fd &>/dev/null && alias fd='fdfind'
+command -v lazygit &>/dev/null && alias lg='lazygit'
 
 # ---------------------------------------------------------------------------
 # fzf — fuzzy finder (Ctrl+R history, Ctrl+T file picker, Alt+C cd)

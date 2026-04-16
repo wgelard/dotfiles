@@ -176,6 +176,9 @@ if ($installShell -match '^[Yy]') {
             Install-WingetPackage -Id $tool.Id -Name $tool.Name
         }
     }
+    # Refresh PATH so newly installed tools (e.g. starship) are available immediately
+    $env:PATH = [System.Environment]::GetEnvironmentVariable('PATH', 'Machine') + ';' +
+                [System.Environment]::GetEnvironmentVariable('PATH', 'User')
 } else {
     Write-Host "→ Skipping shell tools. Install any time — they activate automatically via the Git Bash profile."
 }
@@ -298,6 +301,11 @@ New-Symlink -Target (Join-Path $HOME ".bash_profile")  -Source (Join-Path $Dotfi
 # Starship config — apply catppuccin-powerline preset directly (no symlink needed)
 $starshipDir = Join-Path $HOME ".config"
 if (-not (Test-Path $starshipDir)) { New-Item -ItemType Directory -Path $starshipDir -Force | Out-Null }
+# winget installs starship to Program Files — add to PATH if not yet visible
+if (-not (Get-Command starship -ErrorAction SilentlyContinue)) {
+    $starshipFallback = 'C:\Program Files\starship\bin'
+    if (Test-Path $starshipFallback) { $env:PATH = "$starshipFallback;$env:PATH" }
+}
 if (Get-Command starship -ErrorAction SilentlyContinue) {
     starship preset catppuccin-powerline -o (Join-Path $starshipDir "starship.toml")
     Write-Host "→ Starship: catppuccin-powerline preset applied."
