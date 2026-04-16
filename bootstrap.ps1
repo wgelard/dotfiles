@@ -167,14 +167,20 @@ $fontInstalled = Get-ItemProperty 'HKCU:\SOFTWARE\Microsoft\Windows NT\CurrentVe
     Get-Member -MemberType NoteProperty | Where-Object { $_.Name -match 'FiraCode.*Nerd' }
 if ($fontInstalled) {
     Write-Host "→ FiraCode Nerd Font already installed, skipping."
-} elseif (Get-Command scoop -ErrorAction SilentlyContinue) {
+} else {
+    # Ensure scoop is available (no admin required)
+    if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
+        Write-Host "→ Installing scoop (required for Nerd Fonts)..."
+        Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+        Invoke-RestMethod get.scoop.sh | Invoke-Expression
+        # Refresh PATH so scoop is usable immediately
+        $env:PATH = [System.Environment]::GetEnvironmentVariable('PATH', 'Machine') + ';' +
+                    [System.Environment]::GetEnvironmentVariable('PATH', 'User')
+    }
     Write-Host "→ Installing FiraCode Nerd Font via scoop..."
     scoop bucket add nerd-fonts 2>$null
     scoop install nerd-fonts/FiraCode-NF
     Write-Host "→ FiraCode Nerd Font installed."
-} else {
-    Write-Warning "FiraCode Nerd Font not installed. Download manually from https://www.nerdfonts.com/font-downloads"
-    Write-Host "   Or install scoop first: https://scoop.sh"
 }
 
 # Set FiraCode Nerd Font as default in Windows Terminal settings.json
