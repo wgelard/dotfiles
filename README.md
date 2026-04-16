@@ -32,9 +32,9 @@ What it does:
 1. Installs Git, difftastic, delta, carapace, GitHub CLI, ripgrep, fd, and tldr via **winget** (skips any already on PATH)
 2. Detects Beyond Compare — sets as default diff/merge tool if present, otherwise offers to install it
 3. Optionally installs shell enhancement tools + jq/yq (prompted): starship, zoxide, fzf, eza, bat, lazygit, jq, yq
-2. Installs **mergiraf** via scoop (or cargo binstall as fallback)
-3. Prompts for your git identity and writes `~/.gitconfig.local`
-4. Symlinks `~/.gitconfig`, `~/.gitattributes`, `~/.bash_profile`, PowerShell `$PROFILE`, and `~/.config/starship.toml` into this repo
+4. Installs **mergiraf** via scoop (or cargo binstall as fallback)
+5. Prompts for your git identity and writes `~/.gitconfig.local`
+6. Symlinks `~/.gitconfig`, `~/.gitattributes`, `~/.bash_profile`, PowerShell `$PROFILE`, and `~/.config/starship.toml` into this repo
 
 ### Linux (Bash)
 
