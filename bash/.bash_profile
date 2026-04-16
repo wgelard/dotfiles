@@ -1,6 +1,14 @@
 [[ -f ~/.bashrc ]] && source ~/.bashrc
 
 # ---------------------------------------------------------------------------
+# delta — use as git pager only when available
+# ---------------------------------------------------------------------------
+if command -v delta &>/dev/null; then
+    export GIT_PAGER='delta'
+    export GIT_EXTERNAL_DIFF='delta'
+fi
+
+# ---------------------------------------------------------------------------
 # Shell completions (carapace)
 # ---------------------------------------------------------------------------
 export CARAPACE_BRIDGES='zsh,fish,bash,inshellisense'

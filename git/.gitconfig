@@ -76,13 +76,9 @@
 	autocrlf = false
 	eol = lf
 	attributesfile = ~/.gitattributes
-	pager = delta
 
 [color]
 	ui = auto
-
-[interactive]
-	diffFilter = delta --color-only
 
 [delta]
 	navigator = true

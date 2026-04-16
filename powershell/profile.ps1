@@ -1,4 +1,11 @@
 # ---------------------------------------------------------------------------
+# delta — use as git pager only when available
+# ---------------------------------------------------------------------------
+if (Get-Command delta -ErrorAction SilentlyContinue) {
+    $env:GIT_PAGER = 'delta'
+}
+
+# ---------------------------------------------------------------------------
 # Shell completions (carapace)
 # ---------------------------------------------------------------------------
 if (Get-Command carapace -ErrorAction SilentlyContinue) {
