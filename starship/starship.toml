@@ -5,24 +5,19 @@
 command_timeout = 1000
 
 [character]
-success_symbol = "[❯](bold green)"
-error_symbol   = "[❯](bold red)"
+success_symbol = "[\$](bold white)"
+error_symbol   = "[\$](bold red)"
 
 [git_branch]
-symbol = " "
+symbol = ""
+format = "[(\\($branch\\))](cyan) "
 truncation_length = 30
 
 [git_status]
-# Show counts instead of just symbols
-ahead  = "⇡${count}"
-behind = "⇣${count}"
-staged    = "[+${count}](green)"
-modified  = "[~${count}](yellow)"
-untracked = "[?${count}](blue)"
-deleted   = "[-${count}](red)"
-conflicted = "[=${count}](bold red)"
+format = ""
 
 [directory]
+style = "yellow"
 truncation_length = 4
 truncate_to_repo  = true
 
