@@ -96,13 +96,24 @@ $bcPaths = @(
 $bcExe = $bcPaths | Where-Object { Test-Path $_ } | Select-Object -First 1
 $bcPresent = $bcExe -or (Get-Command bcomp -ErrorAction SilentlyContinue)
 
-if ($bcPresent) {
-    Write-Host "→ Beyond Compare detected — setting as default GUI diff/merge tool."
-    # Write to .gitconfig.local (not the repo file) so it stays machine-specific
+function Write-BcConfig {
+    param([string]$BcExePath)
     $localConfig = Join-Path $HOME ".gitconfig.local"
-    $bcOverride = "`n[diff]`n`tguitool = bc`n[merge]`n`ttool = bc`n`tguitool = bc`n"
+    # Convert Windows path to POSIX for Git Bash (e.g. C:\Program Files\ → /c/Program Files/)
+    $posixPath = '/' + $BcExePath[0].ToString().ToLower() + ($BcExePath.Substring(2) -replace '\\', '/')
+    $bcOverride = @"
+
+[diff]
+	guitool = bc
+[merge]
+	tool = bc
+	guitool = bc
+[difftool "bc"]
+	cmd = "$posixPath" "`$LOCAL" "`$REMOTE"
+[mergetool "bc"]
+	cmd = "$posixPath" "`$LOCAL" "`$REMOTE" "`$BASE" "`$MERGED"
+"@
     if (Test-Path $localConfig) {
-        # Only append if not already present
         $existing = Get-Content $localConfig -Raw
         if ($existing -notmatch 'guitool\s*=\s*bc') {
             Add-Content $localConfig $bcOverride
@@ -110,21 +121,23 @@ if ($bcPresent) {
     } else {
         Add-Content $localConfig $bcOverride
     }
+}
+
+if ($bcPresent) {
+    Write-Host "→ Beyond Compare detected — setting as default GUI diff/merge tool."
+    $exePath = if ($bcExe) { $bcExe } else { (Get-Command bcomp).Source }
+    Write-BcConfig -BcExePath $exePath
 } else {
     $installBC = Read-Host "→ Install Beyond Compare 4 (paid ~`$60, best-in-class GUI diff/merge)? [y/N]"
     if ($installBC -match '^[Yy]') {
         Install-WingetPackage -Id "ScooterSoftware.BeyondCompare.4" -Name "Beyond Compare 4"
         Write-Host "→ Beyond Compare installed — setting as default GUI diff/merge tool."
-        $localConfig = Join-Path $HOME ".gitconfig.local"
-        $bcOverride = "`n[diff]`n`tguitool = bc`n[merge]`n`ttool = bc`n`tguitool = bc`n"
-        if (Test-Path $localConfig) {
-            $existing = Get-Content $localConfig -Raw
-            if ($existing -notmatch 'guitool\s*=\s*bc') {
-                Add-Content $localConfig $bcOverride
-            }
-        } else {
-            Add-Content $localConfig $bcOverride
-        }
+        # Refresh PATH then find the exe
+        $env:PATH = [System.Environment]::GetEnvironmentVariable('PATH', 'Machine') + ';' +
+                    [System.Environment]::GetEnvironmentVariable('PATH', 'User')
+        $installedExe = $bcPaths | Where-Object { Test-Path $_ } | Select-Object -First 1
+        if (-not $installedExe) { $installedExe = (Get-Command bcomp -ErrorAction SilentlyContinue)?.Source }
+        if ($installedExe) { Write-BcConfig -BcExePath $installedExe }
     } else {
         Write-Host "→ Skipping Beyond Compare 4. VS Code will be used as the default GUI diff/merge tool."
         Write-Host "   To use BC later: git dbc (diff)  or  git mbc (merge)"
