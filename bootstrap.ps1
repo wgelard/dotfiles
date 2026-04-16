@@ -98,17 +98,33 @@ $bcPresent = $bcExe -or (Get-Command bcomp -ErrorAction SilentlyContinue)
 
 if ($bcPresent) {
     Write-Host "→ Beyond Compare detected — setting as default GUI diff/merge tool."
-    git config --global diff.guitool bc
-    git config --global merge.tool bc
-    git config --global merge.guitool bc
+    # Write to .gitconfig.local (not the repo file) so it stays machine-specific
+    $localConfig = Join-Path $HOME ".gitconfig.local"
+    $bcOverride = "`n[diff]`n`tguitool = bc`n[merge]`n`ttool = bc`n`tguitool = bc`n"
+    if (Test-Path $localConfig) {
+        # Only append if not already present
+        $existing = Get-Content $localConfig -Raw
+        if ($existing -notmatch 'guitool\s*=\s*bc') {
+            Add-Content $localConfig $bcOverride
+        }
+    } else {
+        Add-Content $localConfig $bcOverride
+    }
 } else {
     $installBC = Read-Host "→ Install Beyond Compare 4 (paid ~`$60, best-in-class GUI diff/merge)? [y/N]"
     if ($installBC -match '^[Yy]') {
         Install-WingetPackage -Id "ScooterSoftware.BeyondCompare.4" -Name "Beyond Compare 4"
         Write-Host "→ Beyond Compare installed — setting as default GUI diff/merge tool."
-        git config --global diff.guitool bc
-        git config --global merge.tool bc
-        git config --global merge.guitool bc
+        $localConfig = Join-Path $HOME ".gitconfig.local"
+        $bcOverride = "`n[diff]`n`tguitool = bc`n[merge]`n`ttool = bc`n`tguitool = bc`n"
+        if (Test-Path $localConfig) {
+            $existing = Get-Content $localConfig -Raw
+            if ($existing -notmatch 'guitool\s*=\s*bc') {
+                Add-Content $localConfig $bcOverride
+            }
+        } else {
+            Add-Content $localConfig $bcOverride
+        }
     } else {
         Write-Host "→ Skipping Beyond Compare 4. VS Code will be used as the default GUI diff/merge tool."
         Write-Host "   To use BC later: git dbc (diff)  or  git mbc (merge)"
