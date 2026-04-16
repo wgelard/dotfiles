@@ -1,6 +1,6 @@
 # dotfiles
 
-Personal dotfiles and machine bootstrap for Windows and Linux.
+Personal dotfiles and Windows machine bootstrap.
 
 ## What's included
 
@@ -8,17 +8,14 @@ Personal dotfiles and machine bootstrap for Windows and Linux.
 |---|---|
 | `git/.gitconfig` | Git aliases, difftastic (inline diffs), VS Code/Beyond Compare (GUI diff/merge), mergiraf merge driver |
 | `git/.gitattributes` | Applies mergiraf as the default merge driver for all files |
-| `bash/.bash_profile` | Shell aliases, tool inits (carapace, zoxide, fzf, starship, eza, bat) |
+| `bash/.bash_profile` | Shell aliases, tool inits (carapace, zoxide, fzf, starship, eza, bat) — used in Git Bash |
 | `powershell/profile.ps1` | PowerShell equivalent of `.bash_profile` — same aliases and tool inits |
-| `starship/starship.toml` | Starship prompt configuration (git status, lang versions, duration) |
 
-`~/.gitconfig.local` holds your name and email and is **never committed** — the bootstrap scripts create it interactively.
+`~/.gitconfig.local` holds your name, email, and machine-specific settings (e.g. BC path) — **never committed**.
 
 ---
 
 ## Quick start
-
-### Windows (PowerShell)
 
 > Requires **Developer Mode** (`Settings > System > For developers`) **or** an elevated (Administrator) shell.
 
@@ -31,25 +28,12 @@ cd "$HOME\dotfiles"
 What it does:
 1. Installs Git, difftastic, delta, carapace, GitHub CLI, ripgrep, fd, and tldr via **winget** (skips any already on PATH)
 2. Detects Beyond Compare — sets as default diff/merge tool if present, otherwise offers to install it
-3. Optionally installs shell enhancement tools + jq/yq (prompted): starship, zoxide, fzf, eza, bat, lazygit, jq, yq
-4. Installs **mergiraf** via scoop (or cargo binstall as fallback)
-5. Prompts for your git identity and writes `~/.gitconfig.local`
-6. Symlinks `~/.gitconfig`, `~/.gitattributes`, `~/.bash_profile`, PowerShell `$PROFILE`, and `~/.config/starship.toml` into this repo
-
-### Linux (Bash)
-
-```bash
-git clone https://github.com/<you>/dotfiles.git ~/dotfiles
-cd ~/dotfiles
-bash bootstrap.sh
-```
-
-What it does:
-1. Installs git, ripgrep, fd, jq, and tldr via **apt**; difftastic, carapace, and delta via cargo if not in apt
-2. Optionally installs shell enhancement tools: starship, zoxide, fzf, eza, bat, lazygit (prompted)
-2. Installs **mergiraf** via cargo binstall or cargo (falls back to a manual-install warning)
-3. Prompts for your git identity and writes `~/.gitconfig.local`
-4. Symlinks `~/.gitconfig`, `~/.gitattributes`, `~/.bash_profile`, and `~/.config/starship.toml` into this repo
+3. Installs **FiraCode Nerd Font** via scoop (installs scoop first if needed) and sets it in Windows Terminal
+4. Optionally installs shell enhancement tools (prompted): starship, zoxide, fzf, eza, bat, lazygit, jq, yq
+5. Applies the **Catppuccin Powerline** starship preset to `~/.config/starship.toml`
+6. Installs **mergiraf** via scoop (or cargo binstall as fallback)
+7. Prompts for your git identity and writes `~/.gitconfig.local`
+8. Symlinks `~/.gitconfig`, `~/.gitattributes`, `~/.bash_profile`, and PowerShell `$PROFILE` into this repo
 
 ---
 
@@ -106,27 +90,26 @@ git difftool -t bc        # opens Beyond Compare  (or: git dbc)
 
 ### delta — pager for git log and show
 
-Adds syntax highlighting and line numbers to `git log -p`, `git show`, and `git blame` output in the terminal.
+Adds syntax highlighting and line numbers to `git log -p`, `git show`, and `git blame` output. Activated automatically via `GIT_PAGER` in the shell profile when delta is on PATH.
 
 ```bash
 git log -p                # automatically paged through delta
 git show HEAD             # diff of last commit, syntax-highlighted
-git blame src/main.js     # highlighted blame view
 ```
 
 ---
 
 ### mergiraf — structured merge driver
 
-Applied automatically to all files during `git merge` and `git rebase`. Uses the file's syntax tree to resolve conflicts that would otherwise require manual intervention (e.g. two branches adding different imports to the same block).
+Applied automatically to all files during `git merge` and `git rebase`. Uses the file's syntax tree to resolve conflicts that would otherwise require manual intervention.
 
-No manual steps needed — it runs transparently. If it can't resolve a conflict it falls back to the standard git conflict markers.
+No manual steps needed — it runs transparently. Falls back to standard git conflict markers if it can't resolve.
 
 ---
 
 ### carapace — shell completions
 
-Provides tab-completions for hundreds of CLI tools (git, gh, docker, kubectl, cargo, …) in Bash.
+Provides tab-completions for hundreds of CLI tools (git, gh, docker, kubectl, cargo, …) in both Bash and PowerShell.
 
 ```bash
 git push <TAB>            # completes remote names and branches
@@ -137,92 +120,61 @@ gh pr <TAB>               # completes pr subcommands
 
 ### gh — GitHub CLI
 
-Interact with GitHub without leaving the terminal.
-
 ```bash
 gh repo clone owner/repo
-gh pr create --fill        # create a PR from current branch
-gh pr list                 # list open PRs
-gh pr checkout 42          # check out PR #42 locally
+gh pr create --fill
+gh pr list
+gh pr checkout 42
 gh issue list --assignee @me
-gh issue create
-gh run list                # list recent CI runs
-gh run watch               # watch current branch CI in real time
+gh run watch
 ```
 
 ---
 
 ### ripgrep (`rg`) — fast grep
 
-Faster than `grep`, respects `.gitignore` by default.
-
 ```bash
-rg "TODO"                  # search current directory recursively
-rg "function foo" src/     # search within a folder
-rg -t js "useState"        # search only JS files
-rg -l "deprecated"         # list files containing a match
-rg --no-ignore "secret"    # include gitignored files
+rg "TODO"
+rg -t js "useState"
+rg -l "deprecated"
 ```
 
 ---
 
 ### fd — fast find
 
-Friendlier and faster than `find`, also respects `.gitignore`.
-
 ```bash
-fd ".env"                  # find files named .env
-fd -e ts                   # find all .ts files
-fd -t d node_modules       # find directories named node_modules
-fd "test" src/             # find files matching "test" under src/
-fd -x wc -l                # run wc -l on every result
+fd ".env"
+fd -e ts
+fd "test" src/
 ```
 
 ---
 
-### jq — JSON processor
-
-Query, filter, and format JSON in the terminal. Essential for API work, CI logs, and config files.
+### jq / yq — JSON and YAML processors
 
 ```bash
 curl -s https://api.github.com/repos/owner/repo | jq '.stargazers_count'
-jq '.dependencies | keys' package.json     # list all dependencies
-jq 'select(.level == "error")' app.log     # filter log entries
-jq -r '.[] | "\(.name): \(.version)"'     # custom formatted output
-```
-
----
-
-### yq — YAML processor
-
-Same as jq but for YAML. Invaluable for Kubernetes, docker-compose, GitHub Actions, and any YAML config.
-
-```bash
 yq '.services.web.image' docker-compose.yml
-yq '.jobs | keys' .github/workflows/ci.yml
-yq -i '.version = "2.0"' config.yaml       # edit in-place
 ```
 
 ---
 
 ### tldr — simplified man pages
 
-Practical examples for any command, one `tldr <command>` away. Much faster than `man`.
-
 ```bash
 tldr tar
 tldr git rebase
 tldr docker
-tldr ssh
 ```
 
 ---
 
-### Shell aliases (`.bash_profile`)
+### Shell aliases
 
 | Alias | Replaces | Notes |
 |---|---|---|
-| `ls` | `eza --icons` | Coloured output with file icons |
+| `ls` | `eza --icons` | Coloured output with file icons (requires Nerd Font) |
 | `ll` | `eza -la --icons --git` | Long listing with git status per file |
 | `cat` | `bat --style=auto` | Syntax highlighting, line numbers, paging |
 | `cd` | `zoxide (z)` | Smart jump — learns your most-used dirs |
@@ -230,101 +182,80 @@ tldr ssh
 | `g` | `git` | |
 | `lg` | `lazygit` | Full terminal git UI |
 
-`fzf` keybindings (active after install):
+`fzf` keybindings:
 - **`Ctrl+R`** — fuzzy search shell history
-- **`Ctrl+T`** — fuzzy file picker, inserts path at cursor
+- **`Ctrl+T`** — fuzzy file picker
 - **`Alt+C`** — fuzzy `cd` into a subdirectory
-
-All aliases are guarded with `command -v` / `Get-Command` — if a tool isn't installed the alias is simply not set, so the profile never errors on a minimal machine.
 
 ---
 
 ### starship — cross-shell prompt
 
-Configured via `starship/starship.toml` (symlinked to `~/.config/starship.toml`). Shows git branch/status, language versions, last command duration, and exit code indicator. Works identically in Git Bash and PowerShell.
+[Catppuccin Powerline](https://starship.rs/presets/catppuccin-powerline) preset applied automatically by the bootstrap. Works in both Git Bash and PowerShell. Requires **FiraCode Nerd Font** (also installed by the bootstrap).
 
-```
-~/projects/dotfiles on  main ⇡1 ~2 via  v20.11 took 3s
-❯
-```
-
-Install: `winget install Starship.Starship` / `cargo install starship`
+To switch flavour, edit `~/.config/starship.toml` and change `palette = 'catppuccin_mocha'` to `catppuccin_frappe`, `catppuccin_macchiato`, or `catppuccin_latte`.
 
 ---
 
 ### Optional tools (prompted during bootstrap)
 
-The bootstrap scripts will ask whether to install these. They activate automatically via the shell profiles once installed:
-
-| Tool | Why | winget / apt |
+| Tool | Why | winget ID |
 |---|---|---|
-| [starship](https://starship.rs) | Cross-shell prompt with git status, lang versions, exit codes | `Starship.Starship` / curl installer |
-| [zoxide](https://github.com/ajeetdsouza/zoxide) | Smart `cd` replacement | `ajeetdsouza.zoxide` / `zoxide` |
-| [fzf](https://github.com/junegunn/fzf) | Fuzzy finder — supercharges `Ctrl+R` history | `junegunn.fzf` / `fzf` |
-| [eza](https://eza.rocks) | Modern `ls` with icons and git status | `eza-community.eza` / cargo |
-| [bat](https://github.com/sharkdp/bat) | `cat` with syntax highlighting | `sharkdp.bat` / `bat` |
-| [lazygit](https://github.com/jesseduffield/lazygit) | Full terminal git UI | `JesseDuffield.lazygit` / GitHub release |
+| [starship](https://starship.rs) | Cross-shell prompt | `Starship.Starship` |
+| [zoxide](https://github.com/ajeetdsouza/zoxide) | Smart `cd` replacement | `ajeetdsouza.zoxide` |
+| [fzf](https://github.com/junegunn/fzf) | Fuzzy finder | `junegunn.fzf` |
+| [eza](https://eza.rocks) | Modern `ls` | `eza-community.eza` |
+| [bat](https://github.com/sharkdp/bat) | `cat` with syntax highlighting | `sharkdp.bat` |
+| [lazygit](https://github.com/jesseduffield/lazygit) | Terminal git UI | `JesseDuffield.lazygit` |
+| [jq](https://jqlang.github.io/jq/) | JSON processor | `jqlang.jq` |
+| [yq](https://github.com/mikefarah/yq) | YAML processor | `MikeFarah.yq` |
 
 ---
 
 ## Prerequisites
 
-### Windows
-- Windows 10 1903+ or Windows 11 (winget is built in)
+- Windows 10 1903+ or Windows 11 (winget built-in)
 - Developer Mode **or** run PowerShell as Administrator (needed for symlinks)
-- Optional: [scoop](https://scoop.sh) or [Rust/cargo](https://rustup.rs) for mergiraf
-
-### Linux
-- Debian/Ubuntu: apt + optionally [Rust/cargo](https://rustup.rs) for difftastic, carapace, and mergiraf
-- Other distros: install git, difftastic, carapace, and mergiraf manually
+- [scoop](https://scoop.sh) is installed automatically by the bootstrap if not present (needed for FiraCode NF and mergiraf)
 
 ---
 
 ## Restoring
 
-Before replacing any existing dotfile, the bootstrap scripts automatically back it up to `~/.dotfiles-backup/<timestamp>/`. To undo the bootstrap:
+Before replacing any existing dotfile, the bootstrap automatically backs it up to `~/.dotfiles-backup/<timestamp>/`. To undo:
 
-**Windows:**
 ```powershell
 .\restore.ps1
 ```
 
-**Linux:**
-```bash
-bash restore.sh
-```
-
-Both scripts list all available backups and restore from the latest by default. To restore from a specific backup:
+To restore from a specific backup:
 
 ```powershell
 .\restore.ps1 -BackupTimestamp 2026-04-15_143022
-```
-```bash
-bash restore.sh 2026-04-15_143022
 ```
 
 ---
 
 ## Updating
 
-Just `git pull` inside the repo — the symlinks mean dotfiles are updated immediately. Then re-run the bootstrap script only if you want to install newly added tools.
-
 ```powershell
 cd "$HOME\dotfiles"
 git pull
-# optionally: .\bootstrap.ps1  (safe to re-run, already-installed items are skipped)
+# safe to re-run — already-installed items are skipped
+.\bootstrap.ps1
 ```
 
 ---
 
 ## Adding a new dotfile
 
-1. Add the file to the appropriate subfolder in this repo (e.g. `bash/`, `git/`)
-2. Add a `New-Symlink` / `symlink` call to both bootstrap scripts
+1. Add the file to the appropriate subfolder (`git/`, `bash/`, `powershell/`)
+2. Add a `New-Symlink` call in `bootstrap.ps1`
 3. Commit and push
 
 ---
 
 ## Notes
 
-- **VS Code** is the default GUI diff/merge tool (`git difftool`, `git mergetool`). Beyond Compare 4 is defined as a named tool and the Windows bootstrap will ask if you want to install it. Switch to it any time with `git dbc` (diff) or `git mbc` (merge), or set it as default by changing `[diff] guitool` and `[merge] tool` in `.gitconfig`. BC is invoked via `bcomp` on PATH — the BC installer adds this automatically.
+- **VS Code** is the default GUI diff/merge tool. Beyond Compare 4 is detected automatically and set as default if present (via full path in `~/.gitconfig.local`). Switch manually with `git dbc` (diff) or `git mbc` (merge).
+- `~/.gitconfig.local` is created by the bootstrap and holds your identity + BC config. It is listed in `.gitignore` and never committed.
