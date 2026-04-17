@@ -263,6 +263,14 @@ What it does:
 
 No starship on Linux — use [oh-my-zsh](https://ohmyz.sh) or your preferred zsh setup independently.
 
+To restore from a backup on Linux:
+
+```bash
+bash restore.sh
+# or a specific timestamp:
+bash restore.sh 2026-04-15_143022
+```
+
 ---
 
 ## Notes
