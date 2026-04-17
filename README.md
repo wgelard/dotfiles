@@ -29,9 +29,9 @@ cd "$HOME\dotfiles"
 What it does:
 1. Installs Git, VS Code, difftastic, delta, carapace, GitHub CLI, ripgrep, fd, and tldr via **winget** (skips any already on PATH)
 2. Detects Beyond Compare — sets as default diff/merge tool if present, otherwise offers to install it
-3. Installs [**FiraCode Nerd Font**](https://www.nerdfonts.com/) via scoop (installs scoop first if needed) and sets it in Windows Terminal and VS Code
-4. Optionally installs shell enhancement tools (default yes): starship, zoxide, fzf, eza, bat, lazygit
-5. Applies the **Catppuccin Powerline** starship preset to `~/.config/starship.toml`
+3. Optionally installs productivity tools (zoxide, fzf, lazygit) — invisible to observers
+4. Optionally installs visual tools (starship, eza, bat, FiraCode Nerd Font) — skip on work machines if needed
+5. Applies the **Catppuccin Powerline** starship preset to `~/.config/starship.toml` (visual group only)
 6. Installs **mergiraf** via scoop (or cargo binstall as fallback)
 7. Fetches git identity from your chosen provider (GitHub.com, GitHub Enterprise, GitLab, or manual) and writes `~/.gitconfig.local`
 8. Symlinks `~/.gitconfig`, `~/.gitattributes`, and `~/.bash_profile` into this repo

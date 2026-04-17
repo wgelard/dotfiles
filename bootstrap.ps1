@@ -154,91 +154,115 @@ if ($bcPresent) {
 }
 
 # ---------------------------------------------------------------------------
-# 2c. Optionally install shell enhancement tools
+# 2c. Shell tools — two groups: productivity (invisible) and visual (visible)
 # ---------------------------------------------------------------------------
 Write-Host ""
-$shellTools = @(
-    [pscustomobject]@{ Id = "Starship.Starship";       Name = "starship";  Cmd = "starship" }
+
+# Group 1 — Productivity tools (invisible to observers)
+$productivityTools = @(
     [pscustomobject]@{ Id = "ajeetdsouza.zoxide";      Name = "zoxide";    Cmd = "zoxide" }
     [pscustomobject]@{ Id = "junegunn.fzf";            Name = "fzf";       Cmd = "fzf" }
-    [pscustomobject]@{ Id = "eza-community.eza";       Name = "eza";       Cmd = "eza" }
-    [pscustomobject]@{ Id = "sharkdp.bat";             Name = "bat";       Cmd = "bat" }
     [pscustomobject]@{ Id = "JesseDuffield.lazygit";   Name = "lazygit";   Cmd = "lazygit" }
 )
-
-$installShell = Read-Host "→ Install shell enhancement tools (starship, zoxide, fzf, eza, bat, lazygit)? [Y/n]"
-if ($installShell -notmatch '^[Nn]') {
-    foreach ($tool in $shellTools) {
+$installProductivity = Read-Host "→ Install productivity tools (zoxide, fzf, lazygit)? [Y/n]"
+if ($installProductivity -notmatch '^[Nn]') {
+    foreach ($tool in $productivityTools) {
         if (Get-Command $tool.Cmd -ErrorAction SilentlyContinue) {
             Write-Host "→ $($tool.Name) already installed, skipping."
         } else {
             Install-WingetPackage -Id $tool.Id -Name $tool.Name
         }
     }
-    # Refresh PATH so newly installed tools (e.g. starship) are available immediately
-    $env:PATH = [System.Environment]::GetEnvironmentVariable('PATH', 'Machine') + ';' +
-                [System.Environment]::GetEnvironmentVariable('PATH', 'User')
 } else {
-    Write-Host "→ Skipping shell tools. Install any time — they activate automatically via the Git Bash profile."
+    Write-Host "→ Skipping productivity tools."
 }
 
+# Group 2 — Visual customization (immediately visible: prompt, ls colors, font)
+Write-Host ""
+Write-Host "  Visual tools make your terminal look customized (Catppuccin prompt, colored ls, Nerd Font)."
+Write-Host "  Skip this on work machines if a fancy terminal might raise eyebrows."
+$installVisual = Read-Host "→ Install visual customization (starship, eza, bat, FiraCode Nerd Font)? [Y/n]"
+$visualEnabled = $installVisual -notmatch '^[Nn]'
+
+$visualTools = @(
+    [pscustomobject]@{ Id = "Starship.Starship";       Name = "starship";  Cmd = "starship" }
+    [pscustomobject]@{ Id = "eza-community.eza";       Name = "eza";       Cmd = "eza" }
+    [pscustomobject]@{ Id = "sharkdp.bat";             Name = "bat";       Cmd = "bat" }
+)
+if ($visualEnabled) {
+    foreach ($tool in $visualTools) {
+        if (Get-Command $tool.Cmd -ErrorAction SilentlyContinue) {
+            Write-Host "→ $($tool.Name) already installed, skipping."
+        } else {
+            Install-WingetPackage -Id $tool.Id -Name $tool.Name
+        }
+    }
+} else {
+    Write-Host "→ Skipping visual tools. Terminal will use default appearance."
+}
+
+# Refresh PATH so newly installed tools are available immediately
+$env:PATH = [System.Environment]::GetEnvironmentVariable('PATH', 'Machine') + ';' +
+            [System.Environment]::GetEnvironmentVariable('PATH', 'User')
+
 # ---------------------------------------------------------------------------
-# 3. Install FiraCode Nerd Font and configure Windows Terminal
+# 3. FiraCode Nerd Font and terminal font config (visual group only)
 # ---------------------------------------------------------------------------
 Write-Host ""
-$fontInstalled = Get-ItemProperty 'HKCU:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts' -ErrorAction SilentlyContinue |
-    Get-Member -MemberType NoteProperty | Where-Object { $_.Name -match 'FiraCode.*Nerd' }
-if ($fontInstalled) {
-    Write-Host "→ FiraCode Nerd Font already installed, skipping."
-} else {
-    # Ensure scoop is available (no admin required)
-    if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
-        Write-Host "→ Installing scoop (required for Nerd Fonts)..."
-        Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
-        Invoke-RestMethod get.scoop.sh | Invoke-Expression
-        # Refresh PATH so scoop is usable immediately
-        $env:PATH = [System.Environment]::GetEnvironmentVariable('PATH', 'Machine') + ';' +
-                    [System.Environment]::GetEnvironmentVariable('PATH', 'User')
+if ($visualEnabled) {
+    $fontInstalled = Get-ItemProperty 'HKCU:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts' -ErrorAction SilentlyContinue |
+        Get-Member -MemberType NoteProperty | Where-Object { $_.Name -match 'FiraCode.*Nerd' }
+    if ($fontInstalled) {
+        Write-Host "→ FiraCode Nerd Font already installed, skipping."
+    } else {
+        if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
+            Write-Host "→ Installing scoop (required for Nerd Fonts)..."
+            Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+            Invoke-RestMethod get.scoop.sh | Invoke-Expression
+            $env:PATH = [System.Environment]::GetEnvironmentVariable('PATH', 'Machine') + ';' +
+                        [System.Environment]::GetEnvironmentVariable('PATH', 'User')
+        }
+        Write-Host "→ Installing FiraCode Nerd Font via scoop..."
+        scoop bucket add nerd-fonts 2>$null
+        scoop install nerd-fonts/FiraCode-NF
+        Write-Host "→ FiraCode Nerd Font installed."
     }
-    Write-Host "→ Installing FiraCode Nerd Font via scoop..."
-    scoop bucket add nerd-fonts 2>$null
-    scoop install nerd-fonts/FiraCode-NF
-    Write-Host "→ FiraCode Nerd Font installed."
-}
 
-# Set FiraCode Nerd Font as default in Windows Terminal settings.json
-$wtSettingsPaths = @(
-    "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
-    "$env:LOCALAPPDATA\Microsoft\Windows Terminal\settings.json"
-)
-$wtSettings = $wtSettingsPaths | Where-Object { Test-Path $_ } | Select-Object -First 1
-if ($wtSettings) {
-    $json = Get-Content $wtSettings -Raw | ConvertFrom-Json
-    if (-not $json.profiles) { $json | Add-Member -NotePropertyName profiles -NotePropertyValue ([pscustomobject]@{}) }
-    if (-not $json.profiles.defaults) { $json.profiles | Add-Member -NotePropertyName defaults -NotePropertyValue ([pscustomobject]@{}) }
-    if (-not $json.profiles.defaults.font) { $json.profiles.defaults | Add-Member -NotePropertyName font -NotePropertyValue ([pscustomobject]@{}) }
-    $json.profiles.defaults.font | Add-Member -NotePropertyName face -NotePropertyValue 'FiraCode Nerd Font' -Force
-    $json | ConvertTo-Json -Depth 20 | Set-Content $wtSettings -Encoding UTF8
-    Write-Host "→ Windows Terminal font set to 'FiraCode Nerd Font'."
+    # Set font in Windows Terminal
+    $wtSettingsPaths = @(
+        "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
+        "$env:LOCALAPPDATA\Microsoft\Windows Terminal\settings.json"
+    )
+    $wtSettings = $wtSettingsPaths | Where-Object { Test-Path $_ } | Select-Object -First 1
+    if ($wtSettings) {
+        $json = Get-Content $wtSettings -Raw | ConvertFrom-Json
+        if (-not $json.profiles) { $json | Add-Member -NotePropertyName profiles -NotePropertyValue ([pscustomobject]@{}) }
+        if (-not $json.profiles.defaults) { $json.profiles | Add-Member -NotePropertyName defaults -NotePropertyValue ([pscustomobject]@{}) }
+        if (-not $json.profiles.defaults.font) { $json.profiles.defaults | Add-Member -NotePropertyName font -NotePropertyValue ([pscustomobject]@{}) }
+        $json.profiles.defaults.font | Add-Member -NotePropertyName face -NotePropertyValue 'FiraCode Nerd Font' -Force
+        $json | ConvertTo-Json -Depth 20 | Set-Content $wtSettings -Encoding UTF8
+        Write-Host "→ Windows Terminal font set to 'FiraCode Nerd Font'."
+    } else {
+        Write-Host "→ Windows Terminal settings.json not found — set font manually to 'FiraCode Nerd Font'."
+    }
+
+    # Set font in VS Code terminal
+    $vsCodeSettingsPaths = @(
+        "$env:APPDATA\Code\User\settings.json"
+        "$env:APPDATA\Code - Insiders\User\settings.json"
+    )
+    foreach ($vsCodeSettings in $vsCodeSettingsPaths | Where-Object { Test-Path $_ }) {
+        New-Item -ItemType Directory -Path $BackupDir -Force | Out-Null
+        $vsBackupName = "vscode_$(Split-Path $vsCodeSettings -Leaf)"
+        Copy-Item $vsCodeSettings (Join-Path $BackupDir $vsBackupName) -Force
+        Write-Host "→ Backed up VS Code settings: $vsCodeSettings"
+        $vsJson = Get-Content $vsCodeSettings -Raw | ConvertFrom-Json
+        $vsJson | Add-Member -NotePropertyName 'terminal.integrated.fontFamily' -NotePropertyValue 'FiraCode Nerd Font' -Force
+        $vsJson | ConvertTo-Json -Depth 20 | Set-Content $vsCodeSettings -Encoding UTF8
+        Write-Host "→ VS Code terminal font set to 'FiraCode Nerd Font' ($vsCodeSettings)."
+    }
 } else {
-    Write-Host "→ Windows Terminal settings.json not found — set font manually to 'FiraCode Nerd Font'."
-}
-
-# Set FiraCode Nerd Font in VS Code terminal
-$vsCodeSettingsPaths = @(
-    "$env:APPDATA\Code\User\settings.json"
-    "$env:APPDATA\Code - Insiders\User\settings.json"
-)
-foreach ($vsCodeSettings in $vsCodeSettingsPaths | Where-Object { Test-Path $_ }) {
-    # Backup VS Code settings before modifying
-    New-Item -ItemType Directory -Path $BackupDir -Force | Out-Null
-    $vsBackupName = "vscode_$(Split-Path $vsCodeSettings -Leaf)"
-    Copy-Item $vsCodeSettings (Join-Path $BackupDir $vsBackupName) -Force
-    Write-Host "→ Backed up VS Code settings: $vsCodeSettings"
-    $vsJson = Get-Content $vsCodeSettings -Raw | ConvertFrom-Json
-    $vsJson | Add-Member -NotePropertyName 'terminal.integrated.fontFamily' -NotePropertyValue 'FiraCode Nerd Font' -Force
-    $vsJson | ConvertTo-Json -Depth 20 | Set-Content $vsCodeSettings -Encoding UTF8
-    Write-Host "→ VS Code terminal font set to 'FiraCode Nerd Font' ($vsCodeSettings)."
+    Write-Host "→ Skipping font installation and terminal font config."
 }
 
 # ---------------------------------------------------------------------------
@@ -412,24 +436,25 @@ foreach ($psProfile in $psProfilePaths) {
     Write-Host "→ PowerShell profile stub written: $psProfile"
 }
 
-# Starship config — apply catppuccin-powerline preset directly (no symlink needed)
-$starshipDir = Join-Path $HOME ".config"
-if (-not (Test-Path $starshipDir)) { New-Item -ItemType Directory -Path $starshipDir -Force | Out-Null }
-# winget installs starship to Program Files — add to PATH if not yet visible
-if (-not (Get-Command starship -ErrorAction SilentlyContinue)) {
-    $starshipFallback = 'C:\Program Files\starship\bin'
-    if (Test-Path $starshipFallback) { $env:PATH = "$starshipFallback;$env:PATH" }
-}
-if (Get-Command starship -ErrorAction SilentlyContinue) {
-    $starshipToml = Join-Path $starshipDir "starship.toml"
-    if (Test-Path $starshipToml) {
-        Write-Host "→ Starship: ~/.config/starship.toml already exists, skipping preset."
-    } else {
-        starship preset catppuccin-powerline -o $starshipToml
-        Write-Host "→ Starship: catppuccin-powerline preset applied."
+# Starship config — apply catppuccin-powerline preset (visual group only)
+if ($visualEnabled) {
+    $starshipDir = Join-Path $HOME ".config"
+    if (-not (Test-Path $starshipDir)) { New-Item -ItemType Directory -Path $starshipDir -Force | Out-Null }
+    if (-not (Get-Command starship -ErrorAction SilentlyContinue)) {
+        $starshipFallback = 'C:\Program Files\starship\bin'
+        if (Test-Path $starshipFallback) { $env:PATH = "$starshipFallback;$env:PATH" }
     }
-} else {
-    Write-Warning "starship not found — skipping preset. Run bootstrap again after installing starship."
+    if (Get-Command starship -ErrorAction SilentlyContinue) {
+        $starshipToml = Join-Path $starshipDir "starship.toml"
+        if (Test-Path $starshipToml) {
+            Write-Host "→ Starship: ~/.config/starship.toml already exists, skipping preset."
+        } else {
+            starship preset catppuccin-powerline -o $starshipToml
+            Write-Host "→ Starship: catppuccin-powerline preset applied."
+        }
+    } else {
+        Write-Warning "starship not found — skipping preset. Run bootstrap again after installing starship."
+    }
 }
 
 # ---------------------------------------------------------------------------
