@@ -55,9 +55,9 @@ if (Get-Command lazygit -ErrorAction SilentlyContinue) {
 # ---------------------------------------------------------------------------
 # Navigation shortcuts
 # ---------------------------------------------------------------------------
-function .. { Set-Location .. }
-function ... { Set-Location ..\.. }
-function .... { Set-Location ..\..\.. }
+function .. { cd .. }
+function ... { cd ..\.. }
+function .... { cd ..\..\.. }
 
 # ---------------------------------------------------------------------------
 # Starship prompt (must be last)

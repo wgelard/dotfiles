@@ -229,6 +229,11 @@ $vsCodeSettingsPaths = @(
     "$env:APPDATA\Code - Insiders\User\settings.json"
 )
 foreach ($vsCodeSettings in $vsCodeSettingsPaths | Where-Object { Test-Path $_ }) {
+    # Backup VS Code settings before modifying
+    New-Item -ItemType Directory -Path $BackupDir -Force | Out-Null
+    $vsBackupName = "vscode_$(Split-Path $vsCodeSettings -Leaf)"
+    Copy-Item $vsCodeSettings (Join-Path $BackupDir $vsBackupName) -Force
+    Write-Host "→ Backed up VS Code settings: $vsCodeSettings"
     $vsJson = Get-Content $vsCodeSettings -Raw | ConvertFrom-Json
     $vsJson | Add-Member -NotePropertyName 'terminal.integrated.fontFamily' -NotePropertyValue 'FiraCode Nerd Font' -Force
     $vsJson | ConvertTo-Json -Depth 20 | Set-Content $vsCodeSettings -Encoding UTF8
@@ -265,8 +270,8 @@ if (Test-Path $localConfig) {
 } else {
     Write-Host ""
     Write-Host "Git identity (will be written to ~/.gitconfig.local, NOT committed):"
-    $gitName  = Read-Host "  user.name"
-    $gitEmail = Read-Host "  user.email"
+    do { $gitName  = Read-Host "  user.name" }  until ($gitName.Trim() -ne '')
+    do { $gitEmail = Read-Host "  user.email" } until ($gitEmail.Trim() -ne '')
     @"
 [user]
 	name = $gitName
@@ -344,8 +349,13 @@ if (-not (Get-Command starship -ErrorAction SilentlyContinue)) {
     if (Test-Path $starshipFallback) { $env:PATH = "$starshipFallback;$env:PATH" }
 }
 if (Get-Command starship -ErrorAction SilentlyContinue) {
-    starship preset catppuccin-powerline -o (Join-Path $starshipDir "starship.toml")
-    Write-Host "→ Starship: catppuccin-powerline preset applied."
+    $starshipToml = Join-Path $starshipDir "starship.toml"
+    if (Test-Path $starshipToml) {
+        Write-Host "→ Starship: ~/.config/starship.toml already exists, skipping preset."
+    } else {
+        starship preset catppuccin-powerline -o $starshipToml
+        Write-Host "→ Starship: catppuccin-powerline preset applied."
+    }
 } else {
     Write-Warning "starship not found — skipping preset. Run bootstrap again after installing starship."
 }

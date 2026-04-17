@@ -52,11 +52,13 @@ $BackupDir = $chosen.FullName
 
 # Files managed by bootstrap
 $dotfiles = @(
-    [pscustomobject]@{ Name = ".gitconfig";       Target = Join-Path $HOME ".gitconfig" }
-    [pscustomobject]@{ Name = ".gitattributes";   Target = Join-Path $HOME ".gitattributes" }
-    [pscustomobject]@{ Name = ".bash_profile";    Target = Join-Path $HOME ".bash_profile" }
-    [pscustomobject]@{ Name = "profile.ps1";      Target = $PROFILE }
-    [pscustomobject]@{ Name = "starship.toml";    Target = Join-Path $HOME ".config\starship.toml" }
+    [pscustomobject]@{ Name = ".gitconfig";                                    Target = Join-Path $HOME ".gitconfig" }
+    [pscustomobject]@{ Name = ".gitattributes";                                Target = Join-Path $HOME ".gitattributes" }
+    [pscustomobject]@{ Name = ".bash_profile";                                 Target = Join-Path $HOME ".bash_profile" }
+    [pscustomobject]@{ Name = "starship.toml";                                 Target = Join-Path $HOME ".config\starship.toml" }
+    # PowerShell stubs — backed up with folder-prefixed names
+    [pscustomobject]@{ Name = "PowerShell_Microsoft.PowerShell_profile.ps1";   Target = Join-Path ([Environment]::GetFolderPath('MyDocuments')) "PowerShell\Microsoft.PowerShell_profile.ps1" }
+    [pscustomobject]@{ Name = "WindowsPowerShell_Microsoft.PowerShell_profile.ps1"; Target = Join-Path ([Environment]::GetFolderPath('MyDocuments')) "WindowsPowerShell\Microsoft.PowerShell_profile.ps1" }
 )
 
 foreach ($df in $dotfiles) {
