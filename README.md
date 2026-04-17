@@ -29,7 +29,7 @@ cd "$HOME\dotfiles"
 What it does:
 1. Installs Git, difftastic, delta, carapace, GitHub CLI, ripgrep, fd, and tldr via **winget** (skips any already on PATH)
 2. Detects Beyond Compare — sets as default diff/merge tool if present, otherwise offers to install it
-3. Installs **FiraCode Nerd Font** via scoop (installs scoop first if needed) and sets it in Windows Terminal and VS Code
+3. Installs [**FiraCode Nerd Font**](https://www.nerdfonts.com/) via scoop (installs scoop first if needed) and sets it in Windows Terminal and VS Code
 4. Optionally installs shell enhancement tools (default yes): starship, zoxide, fzf, eza, bat, lazygit
 5. Applies the **Catppuccin Powerline** starship preset to `~/.config/starship.toml`
 6. Installs **mergiraf** via scoop (or cargo binstall as fallback)
@@ -77,7 +77,7 @@ What it does:
 
 ---
 
-### difftastic — syntax-aware inline diffs
+### [difftastic](https://difftastic.wilfred.me.uk/) — syntax-aware inline diffs
 
 Replaces the default `git diff` output. Understands code structure, so reformats and moved code don't show as noise.
 
@@ -90,7 +90,7 @@ git difftool -t bc        # opens Beyond Compare  (or: git dbc)
 
 ---
 
-### delta — pager for git log and show
+### [delta](https://dandavison.github.io/delta/) — pager for git log and show
 
 Adds syntax highlighting and line numbers to `git log -p`, `git show`, and `git blame` output. Activated automatically via `GIT_PAGER` in the shell profile when delta is on PATH.
 
@@ -101,7 +101,7 @@ git show HEAD             # diff of last commit, syntax-highlighted
 
 ---
 
-### mergiraf — structured merge driver
+### [mergiraf](https://codeberg.org/mergiraf/mergiraf) — structured merge driver
 
 Applied automatically to all files during `git merge` and `git rebase`. Uses the file's syntax tree to resolve conflicts that would otherwise require manual intervention.
 
@@ -109,7 +109,7 @@ No manual steps needed — it runs transparently. Falls back to standard git con
 
 ---
 
-### carapace — shell completions
+### [carapace](https://carapace.sh/) — shell completions
 
 Provides tab-completions for hundreds of CLI tools (git, gh, docker, kubectl, cargo, …) in both Bash and PowerShell.
 
@@ -120,7 +120,7 @@ gh pr <TAB>               # completes pr subcommands
 
 ---
 
-### gh — GitHub CLI
+### [gh](https://cli.github.com/) — GitHub CLI
 
 ```bash
 gh repo clone owner/repo
@@ -133,7 +133,7 @@ gh run watch
 
 ---
 
-### ripgrep (`rg`) — fast grep
+### [ripgrep](https://github.com/BurntSushi/ripgrep) (`rg`) — fast grep
 
 ```bash
 rg "TODO"
@@ -143,7 +143,7 @@ rg -l "deprecated"
 
 ---
 
-### fd — fast find
+### [fd](https://github.com/sharkdp/fd) — fast find
 
 ```bash
 fd ".env"
@@ -153,7 +153,7 @@ fd "test" src/
 
 ---
 
-### tldr — simplified man pages
+### [tldr](https://tldr.sh/) — simplified man pages
 
 ```bash
 tldr tar
@@ -182,7 +182,7 @@ tldr docker
 
 ---
 
-### starship — cross-shell prompt
+### [starship](https://starship.rs/) — cross-shell prompt
 
 [Catppuccin Powerline](https://starship.rs/presets/catppuccin-powerline) preset applied automatically by the bootstrap. Works in both Git Bash and PowerShell. Requires **FiraCode Nerd Font** (also installed by the bootstrap).
 
