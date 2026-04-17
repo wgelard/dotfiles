@@ -69,5 +69,9 @@ if (-not (Get-Command starship -ErrorAction SilentlyContinue)) {
     }
 }
 if (Get-Command starship -ErrorAction SilentlyContinue) {
+    # Ensure VT/ANSI processing is active before starship init.
+    # VS Code's PowerShell extension pty may not set this, causing \x1b[0m to
+    # print as literal text instead of being interpreted as an ANSI reset.
+    $env:TERM = 'xterm-256color'
     Invoke-Expression (&starship init powershell)
 }
