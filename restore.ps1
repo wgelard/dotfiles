@@ -150,7 +150,8 @@ if ($uninstallVisual -match '^[Yy]') {
     )
     foreach ($vsCodeSettings in $vsCodeSettingsPaths | Where-Object { Test-Path $_ }) {
         $vsJson = Get-Content $vsCodeSettings -Raw | ConvertFrom-Json
-        if ($vsJson.'terminal.integrated.fontFamily' -eq 'FiraCode Nerd Font') {
+        $prop = $vsJson.PSObject.Properties['terminal.integrated.fontFamily']
+        if ($prop -and $prop.Value -eq 'FiraCode Nerd Font') {
             $vsJson.PSObject.Properties.Remove('terminal.integrated.fontFamily')
             $vsJson | ConvertTo-Json -Depth 20 | Set-Content $vsCodeSettings -Encoding UTF8
             Write-Host "→ VS Code terminal font reverted to default ($vsCodeSettings)."
