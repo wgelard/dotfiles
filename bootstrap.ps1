@@ -273,37 +273,74 @@ if (Test-Path $localConfig) {
     $gitName  = $null
     $gitEmail = $null
 
-    # Try to fetch identity from GitHub CLI
-    if (Get-Command gh -ErrorAction SilentlyContinue) {
-        $ghStatus = gh auth status 2>&1
-        if ($LASTEXITCODE -ne 0) {
-            Write-Host "→ GitHub CLI not authenticated. Launching browser login..."
-            gh auth login --web --git-protocol https
-        }
-        # Fetch name and email from GitHub API
-        try {
-            $ghUser  = gh api user --jq '.name'  2>$null
-            $ghEmail = gh api user/emails --jq '[.[] | select(.primary == true)] | .[0].email' 2>$null
-            if ($ghUser.Trim() -ne '' -and $ghEmail.Trim() -ne '') {
-                Write-Host ""
-                Write-Host "→ GitHub identity detected:"
-                Write-Host "    name:  $ghUser"
-                Write-Host "    email: $ghEmail"
-                $confirm = Read-Host "  Use this identity? [Y/n]"
-                if ($confirm -notmatch '^[Nn]') {
-                    $gitName  = $ghUser.Trim()
-                    $gitEmail = $ghEmail.Trim()
+    Write-Host "Git identity — which provider?"
+    Write-Host "  1. GitHub (github.com)"
+    Write-Host "  2. GitHub Enterprise (custom host)"
+    Write-Host "  3. GitLab"
+    Write-Host "  4. Enter manually"
+    $providerChoice = Read-Host "  Choice [1-4]"
+
+    switch ($providerChoice.Trim()) {
+        '1' {
+            if (Get-Command gh -ErrorAction SilentlyContinue) {
+                $ghStatus = gh auth status --hostname github.com 2>&1
+                if ($LASTEXITCODE -ne 0) {
+                    Write-Host "→ Launching GitHub.com browser login..."
+                    gh auth login --hostname github.com --web --git-protocol https
                 }
-            }
-        } catch {
-            Write-Host "→ Could not fetch identity from GitHub API, falling back to manual entry."
+                try {
+                    $gitName  = (gh api user --hostname github.com --jq '.name' 2>$null).Trim()
+                    $gitEmail = (gh api user/emails --hostname github.com --jq '[.[] | select(.primary == true)] | .[0].email' 2>$null).Trim()
+                } catch {}
+            } else { Write-Host "→ gh CLI not found, falling back to manual." }
+        }
+        '2' {
+            $gheHost = Read-Host "  GitHub Enterprise hostname (e.g. github.mycompany.com)"
+            if (Get-Command gh -ErrorAction SilentlyContinue) {
+                $ghStatus = gh auth status --hostname $gheHost 2>&1
+                if ($LASTEXITCODE -ne 0) {
+                    Write-Host "→ Launching browser login for $gheHost..."
+                    gh auth login --hostname $gheHost --web --git-protocol https
+                }
+                try {
+                    $gitName  = (gh api user --hostname $gheHost --jq '.name' 2>$null).Trim()
+                    # Email endpoint may be restricted on enterprise — try, fall through if 404
+                    $emailRaw = gh api user/emails --hostname $gheHost --jq '[.[] | select(.primary == true)] | .[0].email' 2>$null
+                    if ($LASTEXITCODE -eq 0) { $gitEmail = $emailRaw.Trim() }
+                } catch {}
+            } else { Write-Host "→ gh CLI not found, falling back to manual." }
+        }
+        '3' {
+            if (Get-Command glab -ErrorAction SilentlyContinue) {
+                $glStatus = glab auth status 2>&1
+                if ($LASTEXITCODE -ne 0) {
+                    Write-Host "→ Launching GitLab browser login..."
+                    glab auth login --stdin
+                }
+                try {
+                    $glUser   = glab api /user 2>$null | ConvertFrom-Json
+                    $gitName  = $glUser.name.Trim()
+                    $gitEmail = $glUser.email.Trim()
+                } catch {}
+            } else { Write-Host "→ glab CLI not found, falling back to manual." }
         }
     }
 
-    # Manual fallback
-    if (-not $gitName -or -not $gitEmail) {
-        Write-Host "Git identity (will be written to ~/.gitconfig.local, NOT committed):"
+    # Show fetched values and confirm
+    if ($gitName -and $gitEmail) {
+        Write-Host ""
+        Write-Host "→ Identity detected:"
+        Write-Host "    name:  $gitName"
+        Write-Host "    email: $gitEmail"
+        $confirm = Read-Host "  Use this identity? [Y/n]"
+        if ($confirm -match '^[Nn]') { $gitName = $null; $gitEmail = $null }
+    }
+
+    # Manual fallback — keep name if fetched, only prompt what's missing
+    if (-not $gitName) {
         do { $gitName  = Read-Host "  user.name" }  until ($gitName.Trim() -ne '')
+    }
+    if (-not $gitEmail) {
         do { $gitEmail = Read-Host "  user.email" } until ($gitEmail.Trim() -ne '')
     }
 

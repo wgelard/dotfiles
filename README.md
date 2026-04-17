@@ -33,7 +33,7 @@ What it does:
 4. Optionally installs shell enhancement tools (default yes): starship, zoxide, fzf, eza, bat, lazygit
 5. Applies the **Catppuccin Powerline** starship preset to `~/.config/starship.toml`
 6. Installs **mergiraf** via scoop (or cargo binstall as fallback)
-7. Fetches git identity from GitHub (browser login if needed) and writes `~/.gitconfig.local`
+7. Fetches git identity from your chosen provider (GitHub.com, GitHub Enterprise, GitLab, or manual) and writes `~/.gitconfig.local`
 8. Symlinks `~/.gitconfig`, `~/.gitattributes`, and `~/.bash_profile` into this repo
 9. Writes a dot-source stub to PowerShell profiles (PS5 + PS7) — avoids OneDrive symlink issues
 
