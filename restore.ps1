@@ -91,15 +91,19 @@ Write-Host "  starship, eza, bat, FiraCode Nerd Font"
 $uninstallVisual = Read-Host "→ Uninstall visual tools and revert terminal fonts? [y/N]"
 if ($uninstallVisual -match '^[Yy]') {
     $visualPackages = @(
-        [pscustomobject]@{ Id = "Starship.Starship";   Name = "starship" }
-        [pscustomobject]@{ Id = "eza-community.eza";   Name = "eza" }
-        [pscustomobject]@{ Id = "sharkdp.bat";         Name = "bat" }
+        [pscustomobject]@{ Id = "Starship.Starship";   Name = "starship";  AllVersions = $true }
+        [pscustomobject]@{ Id = "eza-community.eza";   Name = "eza";       AllVersions = $false }
+        [pscustomobject]@{ Id = "sharkdp.bat";         Name = "bat";       AllVersions = $false }
     )
     foreach ($pkg in $visualPackages) {
         $installed = winget list --id $pkg.Id --exact --accept-source-agreements 2>&1
         if ($installed -match [regex]::Escape($pkg.Id)) {
             Write-Host "→ Uninstalling $($pkg.Name)..."
-            winget uninstall --id $pkg.Id --silent --accept-source-agreements
+            if ($pkg.AllVersions) {
+                winget uninstall --id $pkg.Id --all-versions --silent --accept-source-agreements
+            } else {
+                winget uninstall --id $pkg.Id --silent --accept-source-agreements
+            }
         } else {
             Write-Host "→ $($pkg.Name) not installed, skipping."
         }
@@ -110,7 +114,11 @@ if ($uninstallVisual -match '^[Yy]') {
         $scoopList = scoop list 2>$null
         if ($scoopList -match 'FiraCode-NF') {
             Write-Host "→ Uninstalling FiraCode Nerd Font via scoop..."
-            scoop uninstall nerd-fonts/FiraCode-NF
+            $fontResult = scoop uninstall nerd-fonts/FiraCode-NF 2>&1
+            if ($LASTEXITCODE -ne 0 -or ($fontResult -match 'currently being used|cannot be deleted')) {
+                Write-Host "  ! Font in use — close VS Code and Windows Terminal, then run:"
+                Write-Host "      scoop uninstall nerd-fonts/FiraCode-NF"
+            }
         } else {
             Write-Host "→ FiraCode Nerd Font not installed via scoop, skipping."
         }
