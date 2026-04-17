@@ -104,6 +104,10 @@ if ($uninstallVisual -match '^[Yy]') {
             } else {
                 winget uninstall --id $pkg.Id --silent --accept-source-agreements
             }
+            if ($LASTEXITCODE -ne 0) {
+                Write-Host "  ! Failed to uninstall $($pkg.Name) (exit $LASTEXITCODE). Try manually:"
+                Write-Host "      winget uninstall --id $($pkg.Id) --all-versions"
+            }
         } else {
             Write-Host "→ $($pkg.Name) not installed, skipping."
         }
@@ -132,8 +136,9 @@ if ($uninstallVisual -match '^[Yy]') {
     $wtSettings = $wtSettingsPaths | Where-Object { Test-Path $_ } | Select-Object -First 1
     if ($wtSettings) {
         $json = Get-Content $wtSettings -Raw | ConvertFrom-Json
-        if ($json.profiles?.defaults?.font?.face -eq 'FiraCode Nerd Font') {
-            $json.profiles.defaults.font.PSObject.Properties.Remove('face')
+        $wtFont = $json.profiles?.defaults?.font
+        if ($wtFont -and $wtFont.PSObject.Properties['face'] -and $wtFont.face -eq 'FiraCode Nerd Font') {
+            $wtFont.PSObject.Properties.Remove('face')
             $json | ConvertTo-Json -Depth 20 | Set-Content $wtSettings -Encoding UTF8
             Write-Host "→ Windows Terminal font reverted to default."
         }
