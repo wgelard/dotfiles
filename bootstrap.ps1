@@ -69,6 +69,7 @@ $packages = @(
     [pscustomobject]@{ Id = "BurntSushi.ripgrep.MSVC";          Name = "ripgrep";          Cmd = "rg" }
     [pscustomobject]@{ Id = "sharkdp.fd";                       Name = "fd";               Cmd = "fd" }
     [pscustomobject]@{ Id = "tldr-pages.tlrc";                  Name = "tldr";             Cmd = "tldr" }
+    [pscustomobject]@{ Id = "Microsoft.VisualStudioCode";       Name = "VS Code";          Cmd = "code" }
 )
 
 foreach ($pkg in $packages) {

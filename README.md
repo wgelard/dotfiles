@@ -1,6 +1,6 @@
 # dotfiles
 
-Personal dotfiles and Windows machine bootstrap.
+Personal dotfiles with fully automatic bootstrap for Windows (Git Bash + PowerShell) and minimal setup for Linux.
 
 ## What's included
 
@@ -27,7 +27,7 @@ cd "$HOME\dotfiles"
 ```
 
 What it does:
-1. Installs Git, difftastic, delta, carapace, GitHub CLI, ripgrep, fd, and tldr via **winget** (skips any already on PATH)
+1. Installs Git, VS Code, difftastic, delta, carapace, GitHub CLI, ripgrep, fd, and tldr via **winget** (skips any already on PATH)
 2. Detects Beyond Compare — sets as default diff/merge tool if present, otherwise offers to install it
 3. Installs [**FiraCode Nerd Font**](https://www.nerdfonts.com/) via scoop (installs scoop first if needed) and sets it in Windows Terminal and VS Code
 4. Optionally installs shell enhancement tools (default yes): starship, zoxide, fzf, eza, bat, lazygit
