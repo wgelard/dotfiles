@@ -269,9 +269,43 @@ if (Test-Path $localConfig) {
     Write-Host "→ $localConfig already exists, skipping identity prompt."
 } else {
     Write-Host ""
-    Write-Host "Git identity (will be written to ~/.gitconfig.local, NOT committed):"
-    do { $gitName  = Read-Host "  user.name" }  until ($gitName.Trim() -ne '')
-    do { $gitEmail = Read-Host "  user.email" } until ($gitEmail.Trim() -ne '')
+    $gitName  = $null
+    $gitEmail = $null
+
+    # Try to fetch identity from GitHub CLI
+    if (Get-Command gh -ErrorAction SilentlyContinue) {
+        $ghStatus = gh auth status 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "→ GitHub CLI not authenticated. Launching browser login..."
+            gh auth login --web --git-protocol https
+        }
+        # Fetch name and email from GitHub API
+        try {
+            $ghUser  = gh api user --jq '.name'  2>$null
+            $ghEmail = gh api user/emails --jq '[.[] | select(.primary == true)] | .[0].email' 2>$null
+            if ($ghUser.Trim() -ne '' -and $ghEmail.Trim() -ne '') {
+                Write-Host ""
+                Write-Host "→ GitHub identity detected:"
+                Write-Host "    name:  $ghUser"
+                Write-Host "    email: $ghEmail"
+                $confirm = Read-Host "  Use this identity? [Y/n]"
+                if ($confirm -notmatch '^[Nn]') {
+                    $gitName  = $ghUser.Trim()
+                    $gitEmail = $ghEmail.Trim()
+                }
+            }
+        } catch {
+            Write-Host "→ Could not fetch identity from GitHub API, falling back to manual entry."
+        }
+    }
+
+    # Manual fallback
+    if (-not $gitName -or -not $gitEmail) {
+        Write-Host "Git identity (will be written to ~/.gitconfig.local, NOT committed):"
+        do { $gitName  = Read-Host "  user.name" }  until ($gitName.Trim() -ne '')
+        do { $gitEmail = Read-Host "  user.email" } until ($gitEmail.Trim() -ne '')
+    }
+
     @"
 [user]
 	name = $gitName
