@@ -105,8 +105,10 @@ if ($uninstallVisual -match '^[Yy]') {
                 winget uninstall --id $pkg.Id --silent --accept-source-agreements
             }
             if ($LASTEXITCODE -ne 0) {
-                Write-Host "  ! Failed to uninstall $($pkg.Name) (exit $LASTEXITCODE). Try manually:"
+                Write-Host "  ! Failed to uninstall $($pkg.Name) (likely needs elevation)."
+                Write-Host "  Run this from an elevated PowerShell (right-click → Run as Administrator):"
                 Write-Host "      winget uninstall --id $($pkg.Id) --all-versions"
+                Write-Host "  Until then, starship will still load from the shell profile."
             }
         } else {
             Write-Host "→ $($pkg.Name) not installed, skipping."
