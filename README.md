@@ -209,6 +209,25 @@ To switch flavour, edit `~/.config/starship.toml` and change `palette = 'catppuc
 - Developer Mode **or** run PowerShell as Administrator (needed for symlinks)
 - [scoop](https://scoop.sh) is installed automatically by the bootstrap if not present (needed for FiraCode NF and mergiraf)
 
+### Enabling Developer Mode (recommended)
+
+Allows symlinks without admin. One-time setup:
+
+1. Open **Settings** → **System** → **For developers** (or search "developer settings")
+2. Toggle **Developer Mode** on
+3. Confirm the UAC prompt
+
+Then run the bootstrap from a normal (non-elevated) PowerShell.
+
+### Alternative: run as Administrator
+
+If you can't enable Developer Mode (e.g. managed corporate machine):
+
+1. Right-click **Windows Terminal** or **PowerShell** → **Run as administrator**
+2. Run the bootstrap from that elevated session
+
+> **Note:** Some winget packages (e.g. starship, which uses an MSI installer) require elevation to *uninstall* even if they installed without it. If `restore.ps1` fails to remove them, re-run it from an elevated shell.
+
 ---
 
 ## Restoring
