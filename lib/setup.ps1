@@ -169,38 +169,50 @@ if ($needIdentity) {
     switch ($providerChoice.Trim()) {
         '1' {
             if (Get-Command gh -ErrorAction SilentlyContinue) {
-                $ghStatus = gh auth status --hostname github.com 2>&1
+                gh auth status --hostname github.com 2>&1 | Out-Null
                 if ($LASTEXITCODE -ne 0) {
                     Write-Host "→ Launching GitHub.com browser login..."
-                    gh auth login --hostname github.com --web --git-protocol https
+                    gh auth login --hostname github.com --web --git-protocol https 2>$null
+                    if ($LASTEXITCODE -ne 0) {
+                        Write-Host "→ GitHub login failed, falling back to manual."
+                    }
                 }
-                try {
-                    $gitName  = (gh api user --hostname github.com --jq '.name' 2>$null).Trim()
-                    $gitEmail = (gh api user/emails --hostname github.com --jq '[.[] | select(.primary == true)] | .[0].email' 2>$null).Trim()
-                } catch {}
+                if ($LASTEXITCODE -eq 0) {
+                    try {
+                        $gitName  = (gh api user --hostname github.com --jq '.name' 2>$null).Trim()
+                        $gitEmail = (gh api user/emails --hostname github.com --jq '[.[] | select(.primary == true)] | .[0].email' 2>$null).Trim()
+                    } catch {}
+                }
             } else { Write-Host "→ gh CLI not found, falling back to manual." }
         }
         '2' {
             $gheHost = Read-Host "  GitHub Enterprise hostname (e.g. github.mycompany.com)"
+            # Strip protocol and trailing slashes/paths — gh needs bare hostname
+            $gheHost = $gheHost -replace '^https?://' -replace '/.*$' -replace '/$'
             if (Get-Command gh -ErrorAction SilentlyContinue) {
-                $ghStatus = gh auth status --hostname $gheHost 2>&1
+                gh auth status --hostname $gheHost 2>&1 | Out-Null
                 if ($LASTEXITCODE -ne 0) {
                     Write-Host "→ Launching browser login for $gheHost..."
-                    gh auth login --hostname $gheHost --web --git-protocol https
+                    gh auth login --hostname $gheHost --web --git-protocol https 2>$null
+                    if ($LASTEXITCODE -ne 0) {
+                        Write-Host "→ GitHub Enterprise login failed, falling back to manual."
+                    }
                 }
-                try {
-                    $gitName  = (gh api user --hostname $gheHost --jq '.name' 2>$null).Trim()
-                    $emailRaw = gh api user/emails --hostname $gheHost --jq '[.[] | select(.primary == true)] | .[0].email' 2>$null
-                    if ($LASTEXITCODE -eq 0) { $gitEmail = $emailRaw.Trim() }
-                } catch {}
+                if ($LASTEXITCODE -eq 0) {
+                    try {
+                        $gitName  = (gh api user --hostname $gheHost --jq '.name' 2>$null).Trim()
+                        $emailRaw = gh api user/emails --hostname $gheHost --jq '[.[] | select(.primary == true)] | .[0].email' 2>$null
+                        if ($LASTEXITCODE -eq 0) { $gitEmail = $emailRaw.Trim() }
+                    } catch {}
+                }
             } else { Write-Host "→ gh CLI not found, falling back to manual." }
         }
         '3' {
             if (Get-Command glab -ErrorAction SilentlyContinue) {
-                $glStatus = glab auth status 2>&1
+                glab auth status 2>&1 | Out-Null
                 if ($LASTEXITCODE -ne 0) {
                     Write-Host "→ Launching GitLab browser login..."
-                    glab auth login --stdin
+                    glab auth login --stdin 2>$null
                 }
                 try {
                     $glUser   = glab api /user 2>$null | ConvertFrom-Json
@@ -218,6 +230,11 @@ if ($needIdentity) {
         Write-Host "    email: $gitEmail"
         $confirm = Read-Host "  Use this identity? [Y/n]"
         if ($confirm -match '^[Nn]') { $gitName = $null; $gitEmail = $null }
+    } elseif ($gitName) {
+        Write-Host ""
+        Write-Host "→ Name detected: $gitName"
+        $confirm = Read-Host "  Use this name? [Y/n]"
+        if ($confirm -match '^[Nn]') { $gitName = $null }
     }
 
     if (-not $gitName) {
