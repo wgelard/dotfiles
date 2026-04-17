@@ -10,6 +10,7 @@ Personal dotfiles and Windows machine bootstrap.
 | `git/.gitattributes` | Applies mergiraf as the default merge driver for all files |
 | `bash/.bash_profile` | Shell aliases, tool inits (carapace, zoxide, fzf, starship, eza, bat) — used in Git Bash |
 | `bash/.bash_profile_linux` | Minimal Linux profile — git aliases and lazygit only |
+| `powershell/profile.ps1` | PowerShell profile — same aliases and tool inits as Git Bash |
 
 `~/.gitconfig.local` holds your name, email, and machine-specific settings (e.g. BC path) — **never committed**.
 
@@ -34,6 +35,7 @@ What it does:
 6. Installs **mergiraf** via scoop (or cargo binstall as fallback)
 7. Prompts for your git identity and writes `~/.gitconfig.local`
 8. Symlinks `~/.gitconfig`, `~/.gitattributes`, and `~/.bash_profile` into this repo
+9. Writes a dot-source stub to PowerShell profiles (PS5 + PS7) — avoids OneDrive symlink issues
 
 ---
 

@@ -308,6 +308,33 @@ New-Symlink -Target (Join-Path $HOME ".gitconfig")     -Source (Join-Path $Dotfi
 New-Symlink -Target (Join-Path $HOME ".gitattributes") -Source (Join-Path $DotfilesDir "git\.gitattributes")
 New-Symlink -Target (Join-Path $HOME ".bash_profile")  -Source (Join-Path $DotfilesDir "bash\.bash_profile")
 
+# PowerShell profiles — write a dot-source stub to both PS5 and PS7 locations.
+# $PROFILE is typically inside OneDrive which doesn't support symlinks, so we
+# write a small stub instead of symlinking.
+$psProfileStub = ". `"$(Join-Path $DotfilesDir 'powershell\profile.ps1')`""
+$psProfilePaths = @(
+    Join-Path ([Environment]::GetFolderPath('MyDocuments')) "PowerShell\Microsoft.PowerShell_profile.ps1"
+    Join-Path ([Environment]::GetFolderPath('MyDocuments')) "WindowsPowerShell\Microsoft.PowerShell_profile.ps1"
+)
+foreach ($psProfile in $psProfilePaths) {
+    $psProfileDir = Split-Path $psProfile
+    if (-not (Test-Path $psProfileDir)) { New-Item -ItemType Directory -Path $psProfileDir -Force | Out-Null }
+    if (Test-Path $psProfile) {
+        $existing = Get-Content $psProfile -Raw -ErrorAction SilentlyContinue
+        if ($existing -match [regex]::Escape($DotfilesDir)) {
+            Write-Host "→ PowerShell profile stub already present: $psProfile"
+            continue
+        }
+        # Back up existing profile before overwriting
+        New-Item -ItemType Directory -Path $BackupDir -Force | Out-Null
+        $backupName = "$(Split-Path $psProfileDir -Leaf)_$(Split-Path $psProfile -Leaf)"
+        Copy-Item $psProfile (Join-Path $BackupDir $backupName) -Force
+        Write-Host "→ Backed up existing profile: $psProfile"
+    }
+    Set-Content -Path $psProfile -Value $psProfileStub -Encoding UTF8
+    Write-Host "→ PowerShell profile stub written: $psProfile"
+}
+
 # Starship config — apply catppuccin-powerline preset directly (no symlink needed)
 $starshipDir = Join-Path $HOME ".config"
 if (-not (Test-Path $starshipDir)) { New-Item -ItemType Directory -Path $starshipDir -Force | Out-Null }
