@@ -223,6 +223,18 @@ if ($wtSettings) {
     Write-Host "→ Windows Terminal settings.json not found — set font manually to 'FiraCode Nerd Font'."
 }
 
+# Set FiraCode Nerd Font in VS Code terminal
+$vsCodeSettingsPaths = @(
+    "$env:APPDATA\Code\User\settings.json"
+    "$env:APPDATA\Code - Insiders\User\settings.json"
+)
+foreach ($vsCodeSettings in $vsCodeSettingsPaths | Where-Object { Test-Path $_ }) {
+    $vsJson = Get-Content $vsCodeSettings -Raw | ConvertFrom-Json
+    $vsJson | Add-Member -NotePropertyName 'terminal.integrated.fontFamily' -NotePropertyValue 'FiraCode Nerd Font' -Force
+    $vsJson | ConvertTo-Json -Depth 20 | Set-Content $vsCodeSettings -Encoding UTF8
+    Write-Host "→ VS Code terminal font set to 'FiraCode Nerd Font' ($vsCodeSettings)."
+}
+
 # ---------------------------------------------------------------------------
 # 4. Install mergiraf (no winget package — try scoop, then cargo binstall)
 # ---------------------------------------------------------------------------
