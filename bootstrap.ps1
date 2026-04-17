@@ -18,6 +18,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 $DotfilesDir = $PSScriptRoot
+$BackupDir  = Join-Path $HOME ".dotfiles-backup\$(Get-Date -Format 'yyyy-MM-dd_HHmmss')"
 
 # ---------------------------------------------------------------------------
 # 1. Verify symlink capability
@@ -235,6 +236,9 @@ if ($visualEnabled) {
     )
     $wtSettings = $wtSettingsPaths | Where-Object { Test-Path $_ } | Select-Object -First 1
     if ($wtSettings) {
+        New-Item -ItemType Directory -Path $BackupDir -Force | Out-Null
+        Copy-Item $wtSettings (Join-Path $BackupDir "wt_settings.json") -Force
+        Write-Host "→ Backed up Windows Terminal settings: $wtSettings"
         $json = Get-Content $wtSettings -Raw | ConvertFrom-Json
         if (-not $json.profiles) { $json | Add-Member -NotePropertyName profiles -NotePropertyValue ([pscustomobject]@{}) }
         if (-not $json.profiles.defaults) { $json.profiles | Add-Member -NotePropertyName defaults -NotePropertyValue ([pscustomobject]@{}) }
@@ -253,7 +257,8 @@ if ($visualEnabled) {
     )
     foreach ($vsCodeSettings in $vsCodeSettingsPaths | Where-Object { Test-Path $_ }) {
         New-Item -ItemType Directory -Path $BackupDir -Force | Out-Null
-        $vsBackupName = "vscode_$(Split-Path $vsCodeSettings -Leaf)"
+        $vsAppName    = Split-Path (Split-Path $vsCodeSettings -Parent) -Parent | Split-Path -Leaf
+        $vsBackupName = "vscode_${vsAppName}_settings.json"
         Copy-Item $vsCodeSettings (Join-Path $BackupDir $vsBackupName) -Force
         Write-Host "→ Backed up VS Code settings: $vsCodeSettings"
         $vsJson = Get-Content $vsCodeSettings -Raw | ConvertFrom-Json
@@ -379,7 +384,6 @@ if (Test-Path $localConfig) {
 # ---------------------------------------------------------------------------
 # 6. Symlink dotfiles (backing up any real file first)
 # ---------------------------------------------------------------------------
-$BackupDir = Join-Path $HOME ".dotfiles-backup\$(Get-Date -Format 'yyyy-MM-dd_HHmmss')"
 
 function New-Symlink {
     param([string]$Target, [string]$Source)

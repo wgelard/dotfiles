@@ -6,6 +6,7 @@
 set -euo pipefail
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BACKUP_DIR="${HOME}/.dotfiles-backup/$(date +%Y-%m-%d_%H%M%S)"
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -14,10 +15,9 @@ backup_and_link() {
     local target="$1"
     local source="$2"
     if [[ -e "$target" && ! -L "$target" ]]; then
-        local backup="${HOME}/.dotfiles-backup/$(date +%Y-%m-%d_%H%M%S)"
-        mkdir -p "$backup"
-        cp -a "$target" "$backup/"
-        echo "→ Backed up $(basename "$target") to $backup"
+        mkdir -p "$BACKUP_DIR"
+        cp -a "$target" "$BACKUP_DIR/"
+        echo "→ Backed up $(basename "$target") to $BACKUP_DIR"
     fi
     ln -sf "$source" "$target"
     echo "→ Linked $target"

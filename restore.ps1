@@ -79,6 +79,44 @@ foreach ($df in $dotfiles) {
     Write-Host "        ← $backup"
 }
 
+# Restore Windows Terminal settings (if backed up)
+$wtBackup = Join-Path $BackupDir "wt_settings.json"
+if (Test-Path $wtBackup) {
+    $wtTargetPaths = @(
+        "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
+        "$env:LOCALAPPDATA\Microsoft\Windows Terminal\settings.json"
+    )
+    $wtTarget = $wtTargetPaths | Where-Object { Test-Path $_ } | Select-Object -First 1
+    if ($wtTarget) {
+        Copy-Item $wtBackup $wtTarget -Force
+        Write-Host "→ Restored: $wtTarget"
+        Write-Host "        ← $wtBackup"
+    } else {
+        Write-Host "→ No Windows Terminal settings.json found, skipping wt_settings.json."
+    }
+} else {
+    Write-Host "→ No backup for wt_settings.json, skipping."
+}
+
+# Restore VS Code settings (new per-app name, with legacy fallback)
+$vsRestorations = @(
+    [pscustomobject]@{ Backup = "vscode_Code_settings.json";            Target = "$env:APPDATA\Code\User\settings.json" }
+    [pscustomobject]@{ Backup = "vscode_Code - Insiders_settings.json"; Target = "$env:APPDATA\Code - Insiders\User\settings.json" }
+    [pscustomobject]@{ Backup = "vscode_settings.json";                 Target = "$env:APPDATA\Code\User\settings.json" }  # legacy name
+)
+foreach ($vsr in $vsRestorations) {
+    $vsBackup = Join-Path $BackupDir $vsr.Backup
+    if (-not (Test-Path $vsBackup)) { continue }
+    $vsDir = Split-Path $vsr.Target
+    if (-not (Test-Path $vsDir)) {
+        Write-Host "→ No VS Code installation found for $($vsr.Backup), skipping."
+        continue
+    }
+    Copy-Item $vsBackup $vsr.Target -Force
+    Write-Host "→ Restored: $($vsr.Target)"
+    Write-Host "        ← $vsBackup"
+}
+
 Write-Host ""
 Write-Host "Restore complete. Open a new shell session to apply changes."
 
