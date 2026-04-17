@@ -81,3 +81,69 @@ foreach ($df in $dotfiles) {
 
 Write-Host ""
 Write-Host "Restore complete. Open a new shell session to apply changes."
+
+# ---------------------------------------------------------------------------
+# Optional: uninstall visual tools installed by bootstrap
+# ---------------------------------------------------------------------------
+Write-Host ""
+Write-Host "Visual tools that may have been installed by bootstrap:"
+Write-Host "  starship, eza, bat, FiraCode Nerd Font"
+$uninstallVisual = Read-Host "→ Uninstall visual tools and revert terminal fonts? [y/N]"
+if ($uninstallVisual -match '^[Yy]') {
+    $visualPackages = @(
+        [pscustomobject]@{ Id = "Starship.Starship";   Name = "starship" }
+        [pscustomobject]@{ Id = "eza-community.eza";   Name = "eza" }
+        [pscustomobject]@{ Id = "sharkdp.bat";         Name = "bat" }
+    )
+    foreach ($pkg in $visualPackages) {
+        $installed = winget list --id $pkg.Id --exact --accept-source-agreements 2>&1
+        if ($installed -match [regex]::Escape($pkg.Id)) {
+            Write-Host "→ Uninstalling $($pkg.Name)..."
+            winget uninstall --id $pkg.Id --silent --accept-source-agreements
+        } else {
+            Write-Host "→ $($pkg.Name) not installed, skipping."
+        }
+    }
+
+    # Uninstall FiraCode Nerd Font via scoop
+    if (Get-Command scoop -ErrorAction SilentlyContinue) {
+        $scoopList = scoop list 2>$null
+        if ($scoopList -match 'FiraCode-NF') {
+            Write-Host "→ Uninstalling FiraCode Nerd Font via scoop..."
+            scoop uninstall nerd-fonts/FiraCode-NF
+        } else {
+            Write-Host "→ FiraCode Nerd Font not installed via scoop, skipping."
+        }
+    }
+
+    # Revert Windows Terminal font
+    $wtSettingsPaths = @(
+        "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
+        "$env:LOCALAPPDATA\Microsoft\Windows Terminal\settings.json"
+    )
+    $wtSettings = $wtSettingsPaths | Where-Object { Test-Path $_ } | Select-Object -First 1
+    if ($wtSettings) {
+        $json = Get-Content $wtSettings -Raw | ConvertFrom-Json
+        if ($json.profiles?.defaults?.font?.face -eq 'FiraCode Nerd Font') {
+            $json.profiles.defaults.font.PSObject.Properties.Remove('face')
+            $json | ConvertTo-Json -Depth 20 | Set-Content $wtSettings -Encoding UTF8
+            Write-Host "→ Windows Terminal font reverted to default."
+        }
+    }
+
+    # Revert VS Code terminal font
+    $vsCodeSettingsPaths = @(
+        "$env:APPDATA\Code\User\settings.json"
+        "$env:APPDATA\Code - Insiders\User\settings.json"
+    )
+    foreach ($vsCodeSettings in $vsCodeSettingsPaths | Where-Object { Test-Path $_ }) {
+        $vsJson = Get-Content $vsCodeSettings -Raw | ConvertFrom-Json
+        if ($vsJson.'terminal.integrated.fontFamily' -eq 'FiraCode Nerd Font') {
+            $vsJson.PSObject.Properties.Remove('terminal.integrated.fontFamily')
+            $vsJson | ConvertTo-Json -Depth 20 | Set-Content $vsCodeSettings -Encoding UTF8
+            Write-Host "→ VS Code terminal font reverted to default ($vsCodeSettings)."
+        }
+    }
+
+    Write-Host "→ Visual cleanup complete. Open a new terminal to confirm."
+}
