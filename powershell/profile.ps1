@@ -10,7 +10,7 @@ if (Get-Command delta -ErrorAction SilentlyContinue) {
 # ---------------------------------------------------------------------------
 if (Get-Command carapace -ErrorAction SilentlyContinue) {
     $env:CARAPACE_BRIDGES = 'zsh,fish,bash,inshellisense'
-    carapace _carapace | Out-String | Invoke-Expression
+    (carapace _carapace | Out-String) -replace '\x1b\[[0-9;]*m', '' | Invoke-Expression
 }
 
 # ---------------------------------------------------------------------------
