@@ -113,16 +113,15 @@ if ($uninstallVisual -match '^[Yy]') {
         }
     }
 
-    # Uninstall FiraCode Nerd Font via scoop
+    # FiraCode Nerd Font — cannot be uninstalled while WT or VS Code are open,
+    # and this script is almost certainly running inside one of them.
     if (Get-Command scoop -ErrorAction SilentlyContinue) {
         $scoopList = scoop list 2>$null
         if ($scoopList -match 'FiraCode-NF') {
-            Write-Host "→ Uninstalling FiraCode Nerd Font via scoop..."
-            $fontResult = scoop uninstall nerd-fonts/FiraCode-NF 2>&1
-            if ($LASTEXITCODE -ne 0 -or ($fontResult -match 'currently being used|cannot be deleted')) {
-                Write-Host "  ! Font in use — close VS Code and Windows Terminal, then run:"
-                Write-Host "      scoop uninstall nerd-fonts/FiraCode-NF"
-            }
+            Write-Host ""
+            Write-Host "→ FiraCode Nerd Font: cannot remove while Windows Terminal or VS Code are open."
+            Write-Host "  After closing them, run from a plain PowerShell window (Win+R → powershell):"
+            Write-Host "      scoop uninstall nerd-fonts/FiraCode-NF"
         } else {
             Write-Host "→ FiraCode Nerd Font not installed via scoop, skipping."
         }
