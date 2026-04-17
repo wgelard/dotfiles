@@ -24,7 +24,7 @@ if (-not (Test-Path $BackupRoot)) {
     exit 1
 }
 
-$backups = Get-ChildItem $BackupRoot -Directory | Sort-Object Name
+$backups = @(Get-ChildItem $BackupRoot -Directory | Sort-Object Name)
 
 if ($backups.Count -eq 0) {
     Write-Error "No backup folders found in $BackupRoot."
