@@ -6,6 +6,12 @@ Personal dotfiles with fully automatic bootstrap for Windows (Git Bash + PowerSh
 
 | Path | Purpose |
 |---|---|
+| `bootstrap.ps1` | Orchestrator — runs core setup then offers optional tool groups |
+| `uninstall.ps1` | Remove optional tools and/or restore from backup |
+| `bootstrap.sh` | Linux bootstrap — symlinks, difftastic/mergiraf check, identity |
+| `uninstall.sh` | Linux uninstall — remove config and/or restore from backup |
+| `lib/helpers.ps1` | Shared functions (winget install/uninstall, symlinks, PATH refresh) |
+| `lib/setup.ps1` | Core tools + git config + symlinks + identity prompt |
 | `git/.gitconfig` | Git aliases, difftastic (inline diffs), VS Code/Beyond Compare (GUI diff/merge), mergiraf merge driver |
 | `git/.gitattributes` | Applies mergiraf as the default merge driver for all files |
 | `bash/.bash_profile` | Shell aliases, tool inits (carapace, zoxide, fzf, starship, eza, bat) — used in Git Bash |
@@ -18,6 +24,8 @@ Personal dotfiles with fully automatic bootstrap for Windows (Git Bash + PowerSh
 
 ## Quick start
 
+### Windows
+
 > Requires **Developer Mode** (`Settings > System > For developers`) **or** an elevated (Administrator) shell.
 
 ```powershell
@@ -26,16 +34,37 @@ cd "$HOME\dotfiles"
 .\bootstrap.ps1
 ```
 
-What it does:
+What it does (`lib/setup.ps1` — core):
 1. Installs Git, VS Code, difftastic, delta, carapace, GitHub CLI, ripgrep, fd, and tldr via **winget** (skips any already on PATH)
 2. Detects Beyond Compare — sets as default diff/merge tool if present, otherwise offers to install it
-3. Optionally installs productivity tools (zoxide, fzf, lazygit) — invisible to observers
-4. Optionally installs visual tools (starship, eza, bat, FiraCode Nerd Font) — skip on work machines if needed
-5. Applies the **Catppuccin Powerline** starship preset to `~/.config/starship.toml` (visual group only)
-6. Installs **mergiraf** via scoop (or cargo binstall as fallback)
-7. Fetches git identity from your chosen provider (GitHub.com, GitHub Enterprise, GitLab, or manual) and writes `~/.gitconfig.local`
-8. Symlinks `~/.gitconfig`, `~/.gitattributes`, and `~/.bash_profile` into this repo
-9. Writes a dot-source stub to PowerShell profiles (PS5 + PS7) — avoids OneDrive symlink issues
+3. Installs **mergiraf** via scoop (or cargo binstall as fallback)
+4. Fetches git identity from your chosen provider (GitHub.com, GitHub Enterprise, GitLab, or manual) and writes `~/.gitconfig.local`
+5. Symlinks `~/.gitconfig`, `~/.gitattributes`, and `~/.bash_profile` into this repo
+6. Writes a dot-source stub to PowerShell profiles (PS5 + PS7) — avoids OneDrive symlink issues
+
+Then asks about optional groups:
+
+7. Productivity tools (zoxide, fzf, lazygit) — only asks if something is missing
+8. Visual tools (starship, eza, bat, FiraCode Nerd Font) — skip on work machines if needed
+9. Applies the **Catppuccin Powerline** starship preset to `~/.config/starship.toml` (visual group only)
+
+### Linux
+
+Only git config — no Windows-specific tools, no scoop, no font patching.
+
+```bash
+git clone https://github.com/<you>/dotfiles.git ~/dotfiles
+cd ~/dotfiles
+bash bootstrap.sh
+```
+
+What it does:
+1. Symlinks `~/.gitconfig` and `~/.gitattributes`
+2. Symlinks a minimal `~/.bash_profile` — git aliases (`g`, `lg`) and optional lazygit
+3. Checks for difftastic and mergiraf — shows install hints if missing
+4. Prompts for git identity if `~/.gitconfig.local` is absent (or shows existing identity for confirmation)
+
+No starship on Linux — use [oh-my-zsh](https://ohmyz.sh) or your preferred zsh setup independently.
 
 ---
 
@@ -226,33 +255,60 @@ If you can't enable Developer Mode (e.g. managed corporate machine):
 1. Right-click **Windows Terminal** or **PowerShell** → **Run as administrator**
 2. Run the bootstrap from that elevated session
 
-> **Note:** Some winget packages (e.g. starship, which uses an MSI installer) require elevation to *uninstall* even if they installed without it. If `restore.ps1` fails to remove them, re-run it from an elevated shell.
+> **Note:** Some winget packages (e.g. starship, which uses an MSI installer) require elevation to *uninstall* even if they installed without it. If `uninstall.ps1` fails to remove them, re-run it from an elevated shell.
 
 ---
 
-## Restoring
+## Uninstalling & restoring
 
-Before replacing any existing dotfile, the bootstrap automatically backs it up to `~/.dotfiles-backup/<timestamp>/`. To undo:
+Before replacing any existing dotfile, the bootstrap automatically backs it up to `~/.dotfiles-backup/<timestamp>/`.
+
+### Windows
 
 ```powershell
-.\restore.ps1
+.\uninstall.ps1           # interactive menu — guides you through options
+.\uninstall.ps1 -All      # remove all optional tools + undo config + offer backup restore
 ```
 
-To restore from a specific backup:
+#### All options
 
 ```powershell
-.\restore.ps1 -BackupTimestamp 2026-04-15_143022
+.\uninstall.ps1 -Productivity                                # remove zoxide, fzf, lazygit
+.\uninstall.ps1 -Visual                                       # remove starship, eza, bat + revert fonts
+.\uninstall.ps1 -All                                          # remove all optional tools + undo config + offer backup restore
+.\uninstall.ps1 -Restore                                      # restore dotfiles from latest backup
+.\uninstall.ps1 -Restore -BackupTimestamp 2026-04-15_143022    # restore from specific backup
+```
+
+> Core tools (git, VS Code, Beyond Compare, difftastic, delta, carapace, gh, ripgrep, fd, tldr, mergiraf) are **not removed** by `uninstall.ps1`.
+
+### Linux
+
+```bash
+bash uninstall.sh              # interactive menu
+bash uninstall.sh --all        # remove config + offer backup restore
+bash uninstall.sh --restore    # restore from latest backup
+bash uninstall.sh --restore 2026-04-15_143022  # specific backup
 ```
 
 ---
 
 ## Updating
 
+### Windows
+
 ```powershell
 cd "$HOME\dotfiles"
 git pull
-# safe to re-run — already-installed items are skipped
-.\bootstrap.ps1
+.\bootstrap.ps1          # safe to re-run — already-installed items are skipped
+```
+
+### Linux
+
+```bash
+cd ~/dotfiles
+git pull
+bash bootstrap.sh
 ```
 
 ---
@@ -260,35 +316,8 @@ git pull
 ## Adding a new dotfile
 
 1. Add the file to the appropriate subfolder (`git/`, `bash/`, `powershell/`)
-2. Add a `New-Symlink` call in `bootstrap.ps1`
+2. Add a `New-DotfilesSymlink` call in `lib/setup.ps1`
 3. Commit and push
-
----
-
-## Linux (minimal setup)
-
-On Linux you only need the git config — no Windows-specific tools, no scoop, no font patching.
-
-```bash
-git clone https://github.com/<you>/dotfiles.git ~/dotfiles
-cd ~/dotfiles
-bash bootstrap.sh
-```
-
-What it does:
-1. Symlinks `~/.gitconfig` and `~/.gitattributes`
-2. Symlinks a minimal `~/.bash_profile` — git aliases (`g`, `lg`) and optional lazygit
-3. Prompts for git identity if `~/.gitconfig.local` is absent
-
-No starship on Linux — use [oh-my-zsh](https://ohmyz.sh) or your preferred zsh setup independently.
-
-To restore from a backup on Linux:
-
-```bash
-bash restore.sh
-# or a specific timestamp:
-bash restore.sh 2026-04-15_143022
-```
 
 ---
 
