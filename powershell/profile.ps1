@@ -1,4 +1,28 @@
 # ---------------------------------------------------------------------------
+# Enable VT/ANSI processing — must be first.
+# VS Code's shell integration injects ANSI reset sequences before the console
+# VT flag is set, causing \x1b[0m to appear as literal text on startup.
+# This is a no-op on PS7 (always enabled) and on non-Windows.
+# ---------------------------------------------------------------------------
+if ($IsWindows -or $env:OS -eq 'Windows_NT') {
+    $null = [System.Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+    try {
+        $kernel32 = Add-Type -PassThru -Name 'Kernel32Vt' -Namespace '' -MemberDefinition @'
+            [DllImport("kernel32.dll")] public static extern IntPtr GetStdHandle(int h);
+            [DllImport("kernel32.dll")] public static extern bool GetConsoleMode(IntPtr h, out uint m);
+            [DllImport("kernel32.dll")] public static extern bool SetConsoleMode(IntPtr h, uint m);
+'@ -ErrorAction SilentlyContinue
+        if ($kernel32) {
+            $h = $kernel32::GetStdHandle(-11)   # STD_OUTPUT_HANDLE
+            $m = 0u
+            if ($kernel32::GetConsoleMode($h, [ref]$m)) {
+                $kernel32::SetConsoleMode($h, $m -bor 4) | Out-Null  # ENABLE_VIRTUAL_TERMINAL_PROCESSING
+            }
+        }
+    } catch {}
+}
+
+# ---------------------------------------------------------------------------
 # delta — use as git pager only when available
 # ---------------------------------------------------------------------------
 if (Get-Command delta -ErrorAction SilentlyContinue) {
