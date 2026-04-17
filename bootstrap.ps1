@@ -4,7 +4,7 @@
     Bootstrap a new Windows machine from the dotfiles repository.
 .DESCRIPTION
     - Installs tools via winget (git, difftastic, delta, carapace, gh, ripgrep, fd, tldr)
-    - Optionally installs shell enhancement tools + jq/yq (starship, zoxide, fzf, eza, bat, lazygit, jq, yq)
+    - Optionally installs shell enhancement tools (starship, zoxide, fzf, eza, bat, lazygit)
     - Optionally installs Beyond Compare 4 (paid ~$60) via winget if user confirms
     - Installs mergiraf via scoop (or cargo binstall as fallback)
     - Prompts for git identity and writes ~/.gitconfig.local (not committed)
@@ -163,12 +163,10 @@ $shellTools = @(
     [pscustomobject]@{ Id = "eza-community.eza";       Name = "eza";       Cmd = "eza" }
     [pscustomobject]@{ Id = "sharkdp.bat";             Name = "bat";       Cmd = "bat" }
     [pscustomobject]@{ Id = "JesseDuffield.lazygit";   Name = "lazygit";   Cmd = "lazygit" }
-    [pscustomobject]@{ Id = "jqlang.jq";               Name = "jq";        Cmd = "jq" }
-    [pscustomobject]@{ Id = "MikeFarah.yq";            Name = "yq";        Cmd = "yq" }
 )
 
-$installShell = Read-Host "→ Install shell enhancement tools (starship, zoxide, fzf, eza, bat, lazygit)? [y/N]"
-if ($installShell -match '^[Yy]') {
+$installShell = Read-Host "→ Install shell enhancement tools (starship, zoxide, fzf, eza, bat, lazygit)? [Y/n]"
+if ($installShell -notmatch '^[Nn]') {
     foreach ($tool in $shellTools) {
         if (Get-Command $tool.Cmd -ErrorAction SilentlyContinue) {
             Write-Host "→ $($tool.Name) already installed, skipping."

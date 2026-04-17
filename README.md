@@ -9,7 +9,7 @@ Personal dotfiles and Windows machine bootstrap.
 | `git/.gitconfig` | Git aliases, difftastic (inline diffs), VS Code/Beyond Compare (GUI diff/merge), mergiraf merge driver |
 | `git/.gitattributes` | Applies mergiraf as the default merge driver for all files |
 | `bash/.bash_profile` | Shell aliases, tool inits (carapace, zoxide, fzf, starship, eza, bat) — used in Git Bash |
-| `powershell/profile.ps1` | PowerShell equivalent of `.bash_profile` — same aliases and tool inits |
+| `bash/.bash_profile_linux` | Minimal Linux profile — git aliases and lazygit only |
 
 `~/.gitconfig.local` holds your name, email, and machine-specific settings (e.g. BC path) — **never committed**.
 
@@ -29,11 +29,11 @@ What it does:
 1. Installs Git, difftastic, delta, carapace, GitHub CLI, ripgrep, fd, and tldr via **winget** (skips any already on PATH)
 2. Detects Beyond Compare — sets as default diff/merge tool if present, otherwise offers to install it
 3. Installs **FiraCode Nerd Font** via scoop (installs scoop first if needed) and sets it in Windows Terminal
-4. Optionally installs shell enhancement tools (prompted): starship, zoxide, fzf, eza, bat, lazygit, jq, yq
+4. Optionally installs shell enhancement tools (default yes): starship, zoxide, fzf, eza, bat, lazygit
 5. Applies the **Catppuccin Powerline** starship preset to `~/.config/starship.toml`
 6. Installs **mergiraf** via scoop (or cargo binstall as fallback)
 7. Prompts for your git identity and writes `~/.gitconfig.local`
-8. Symlinks `~/.gitconfig`, `~/.gitattributes`, `~/.bash_profile`, and PowerShell `$PROFILE` into this repo
+8. Symlinks `~/.gitconfig`, `~/.gitattributes`, and `~/.bash_profile` into this repo
 
 ---
 
@@ -151,15 +151,6 @@ fd "test" src/
 
 ---
 
-### jq / yq — JSON and YAML processors
-
-```bash
-curl -s https://api.github.com/repos/owner/repo | jq '.stargazers_count'
-yq '.services.web.image' docker-compose.yml
-```
-
----
-
 ### tldr — simplified man pages
 
 ```bash
@@ -207,8 +198,6 @@ To switch flavour, edit `~/.config/starship.toml` and change `palette = 'catppuc
 | [eza](https://eza.rocks) | Modern `ls` | `eza-community.eza` |
 | [bat](https://github.com/sharkdp/bat) | `cat` with syntax highlighting | `sharkdp.bat` |
 | [lazygit](https://github.com/jesseduffield/lazygit) | Terminal git UI | `JesseDuffield.lazygit` |
-| [jq](https://jqlang.github.io/jq/) | JSON processor | `jqlang.jq` |
-| [yq](https://github.com/mikefarah/yq) | YAML processor | `MikeFarah.yq` |
 
 ---
 
@@ -252,6 +241,25 @@ git pull
 1. Add the file to the appropriate subfolder (`git/`, `bash/`, `powershell/`)
 2. Add a `New-Symlink` call in `bootstrap.ps1`
 3. Commit and push
+
+---
+
+## Linux (minimal setup)
+
+On Linux you only need the git config — no Windows-specific tools, no scoop, no font patching.
+
+```bash
+git clone https://github.com/<you>/dotfiles.git ~/dotfiles
+cd ~/dotfiles
+bash bootstrap.sh
+```
+
+What it does:
+1. Symlinks `~/.gitconfig` and `~/.gitattributes`
+2. Symlinks a minimal `~/.bash_profile` — git aliases (`g`, `lg`) and optional lazygit
+3. Prompts for git identity if `~/.gitconfig.local` is absent
+
+No starship on Linux — use [oh-my-zsh](https://ohmyz.sh) or your preferred zsh setup independently.
 
 ---
 
