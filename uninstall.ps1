@@ -7,12 +7,15 @@
     dotfiles from a timestamped backup created by bootstrap.ps1.
     Does NOT remove core tools (git, VS Code, Beyond Compare, difftastic, delta,
     carapace, gh, ripgrep, fd, tldr, mergiraf) — those are considered essential.
+    AI tools (Copilot CLI, opencode) are optional and can be removed with -AI or -All.
 .PARAMETER Productivity
     Uninstall productivity tools (zoxide, fzf, lazygit).
 .PARAMETER Visual
     Uninstall visual tools (starship, eza, bat) and revert terminal fonts.
+.PARAMETER AI
+    Uninstall AI tools (Copilot CLI, opencode).
 .PARAMETER All
-    Uninstall both productivity and visual tools, remove symlinks and PS profile stubs,
+    Uninstall productivity, visual, and AI tools, remove symlinks and PS profile stubs,
     then offer to restore from backup.
 .PARAMETER Restore
     Restore dotfiles from a backup (latest by default).
@@ -22,6 +25,7 @@
 .EXAMPLE
     .\uninstall.ps1 -Productivity
     .\uninstall.ps1 -Visual
+    .\uninstall.ps1 -AI
     .\uninstall.ps1 -All
     .\uninstall.ps1 -Restore
     .\uninstall.ps1 -Restore -BackupTimestamp 2026-04-15_143022
@@ -32,6 +36,7 @@
 param(
     [switch]$Productivity,
     [switch]$Visual,
+    [switch]$AI,
     [switch]$All,
     [switch]$Restore,
     [string]$BackupTimestamp
@@ -42,24 +47,26 @@ param(
 # ---------------------------------------------------------------------------
 # Interactive mode — no switches provided
 # ---------------------------------------------------------------------------
-if (-not $Productivity -and -not $Visual -and -not $All -and -not $Restore) {
+if (-not $Productivity -and -not $Visual -and -not $AI -and -not $All -and -not $Restore) {
     Write-Host "What to do?"
     Write-Host "  1. Uninstall productivity tools (zoxide, fzf, lazygit)"
     Write-Host "  2. Uninstall visual tools (starship, eza, bat, fonts)"
-    Write-Host "  3. Uninstall all optional tools + undo config"
-    Write-Host "  4. Restore dotfiles from backup"
-    Write-Host "  5. Cancel"
-    $choice = Read-Host "  Choice [1-5]"
+    Write-Host "  3. Uninstall AI tools (Copilot CLI, opencode) + VS Code extensions"
+    Write-Host "  4. Uninstall all optional tools + undo config"
+    Write-Host "  5. Restore dotfiles from backup"
+    Write-Host "  6. Cancel"
+    $choice = Read-Host "  Choice [1-6]"
     switch ($choice.Trim()) {
         '1' { $Productivity = $true }
         '2' { $Visual = $true }
-        '3' { $All = $true }
-        '4' { $Restore = $true }
+        '3' { $AI = $true }
+        '4' { $All = $true }
+        '5' { $Restore = $true }
         default { Write-Host "→ Cancelled."; exit 0 }
     }
 }
 
-if ($All) { $Productivity = $true; $Visual = $true }
+if ($All) { $Productivity = $true; $Visual = $true; $AI = $true }
 
 # ---------------------------------------------------------------------------
 # Uninstall productivity tools
@@ -135,6 +142,18 @@ if ($Visual) {
     }
 
     Write-Host "→ Visual cleanup complete."
+}
+
+# ---------------------------------------------------------------------------
+# Uninstall AI tools
+# ---------------------------------------------------------------------------
+if ($AI) {
+    Write-Host ""
+    Write-Host "=== Uninstalling AI tools ==="
+    foreach ($tool in $AITools) {
+        Uninstall-WingetPackage -Id $tool.Id -Name $tool.Name
+    }
+
 }
 
 # ---------------------------------------------------------------------------

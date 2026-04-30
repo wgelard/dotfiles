@@ -149,5 +149,27 @@ if ($visualEnabled) {
 }
 
 # ---------------------------------------------------------------------------
+# 5. AI tools (Copilot CLI, opencode)
+# ---------------------------------------------------------------------------
+Write-Host ""
+$missingAI = $AITools | Where-Object { -not (Get-Command $_.Cmd -ErrorAction SilentlyContinue) }
+if ($missingAI) {
+    $missingNames = ($missingAI | ForEach-Object { $_.Name }) -join ', '
+    Write-Host "  AI tools bring AI-powered coding assistance to your terminal."
+    Write-Host "  Both require a GitHub Copilot subscription to use."
+    $installAI = Read-Host "→ Install AI tools ($missingNames)? [y/N]"
+    if ($installAI -match '^[Yy]') {
+        foreach ($tool in $missingAI) {
+            Install-WingetPackage -Id $tool.Id -Name $tool.Name
+        }
+        Update-SessionPath
+    } else {
+        Write-Host "→ Skipping AI tools."
+    }
+} else {
+    Write-Host "→ AI tools (Copilot CLI, opencode) already installed."
+}
+
+# ---------------------------------------------------------------------------
 Write-Host ""
 Write-Host "Bootstrap complete. PATH refreshed — newly installed tools are available in this session."

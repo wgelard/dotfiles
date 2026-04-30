@@ -141,3 +141,10 @@ $script:VisualTools = @(
     [pscustomobject]@{ Id = "eza-community.eza";       Name = "eza";       Cmd = "eza" }
     [pscustomobject]@{ Id = "sharkdp.bat";             Name = "bat";       Cmd = "bat" }
 )
+
+$script:AITools = @(
+    [pscustomobject]@{ Id = "GitHub.Copilot";  Name = "Copilot CLI";  Cmd = "copilot" }
+    [pscustomobject]@{ Id = "SST.opencode";    Name = "opencode";     Cmd = "opencode" }
+)
+
+

@@ -47,6 +47,7 @@ Then asks about optional groups:
 7. Productivity tools (zoxide, fzf, lazygit) — only asks if something is missing
 8. Visual tools (starship, eza, bat, FiraCode Nerd Font) — skip on work machines if needed
 9. Applies the **Catppuccin Powerline** starship preset to `~/.config/starship.toml` (visual group only)
+10. AI tools (Copilot CLI, opencode) — requires a GitHub Copilot subscription
 
 ### Linux
 
@@ -229,6 +230,11 @@ To switch flavour, edit `~/.config/starship.toml` and change `palette = 'catppuc
 | [eza](https://eza.rocks) | Modern `ls` | `eza-community.eza` |
 | [bat](https://github.com/sharkdp/bat) | `cat` with syntax highlighting | `sharkdp.bat` |
 | [lazygit](https://github.com/jesseduffield/lazygit) | Terminal git UI | `JesseDuffield.lazygit` |
+| [Copilot CLI](https://github.com/github/copilot-cli) | AI coding assistant in the terminal | `GitHub.Copilot` |
+| [opencode](https://opencode.ai) | AI coding agent for the terminal | `SST.opencode` |
+
+
+> Both AI tools require a **GitHub Copilot subscription**.
 
 ---
 
@@ -275,6 +281,7 @@ Before replacing any existing dotfile, the bootstrap automatically backs it up t
 ```powershell
 .\uninstall.ps1 -Productivity                                # remove zoxide, fzf, lazygit
 .\uninstall.ps1 -Visual                                       # remove starship, eza, bat + revert fonts
+.\uninstall.ps1 -AI                                           # remove Copilot CLI, opencode
 .\uninstall.ps1 -All                                          # remove all optional tools + undo config + offer backup restore
 .\uninstall.ps1 -Restore                                      # restore dotfiles from latest backup
 .\uninstall.ps1 -Restore -BackupTimestamp 2026-04-15_143022    # restore from specific backup
